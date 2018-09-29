@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<litepal>
+    <dbname value="habitstore" ></dbname>
+    <version value="2" ></version>
+    <list>
+        <mapping class="android.lzy.a21habit.summarylist"></mapping>
+        <mapping class="android.lzy.a21habit.dailylist"></mapping>
+        <mapping class="android.lzy.a21habit.impulselist"></mapping>
+    </list>
+</litepal>

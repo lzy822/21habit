@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">21habit</string>
+    <string name="Date">yyyy年MM月dd日</string>
+    <string name="NoPlan">无计划</string>
+    <string name="Number">第</string>
+    <string name="Day">天</string>
+    <string name="PermissionError">必须通过所有权限才能使用本程序!</string>
+    <string name="Name">名称：</string>
+    <string name="OriTime">起始时间：</string>
+    <string name="ContainToday">包含今天</string>
+    <string name="StartTomorrow">从明天开始</string>
+    <string name="Confirm">确定</string>
+    <string name="Cancel">取消</string>
+    <string name="Yes">打破了</string>
+    <string name="No">没有</string>
+    <string name="Warning">警告</string>
+    <string name="Q1">你打破了习惯吗？</string>
+    <string name="Q2">请选择删除方式？</string>
+    <string name="DeleteHabit">删除习惯</string>
+    <string name="BrokeHabit">打破习惯</string>
+    <string name="Time">HH:mm:ss</string>
+    <string name="LevelOne">“刻意，不自然”，需要十分刻意地提醒自己。你会觉得有些不自然，不舒服，你应该调动意志力，克服这些情况。</string>
+    <string name="LevelTwo">“刻意，自然”，你已经觉得比较自然，比较舒服了，但是一不留意，你还会恢复到以前，因此，你还需要刻意地提醒自己改变。</string>
+    <string name="LevelThree">“不刻意，自然”，其实这就是习惯，这一阶段被称为“习惯性的稳定期”。一旦跨入这个阶段，你就已经完成了自我改造，这个习惯已成为你生命中的一个有机的组成部分，它会自然而然地不停为你“效劳”。</string>
+</resources>
