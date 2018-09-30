@@ -14,6 +14,8 @@
     <string name="Yes">打破了</string>
     <string name="No">没有</string>
     <string name="Warning">警告</string>
+    <string name="Notification">通知</string>
+    <string name="ScreenBootReceiver">21habit已启动</string>
     <string name="Q1">你打破了习惯吗？</string>
     <string name="Q2">请选择删除方式？</string>
     <string name="DeleteHabit">删除习惯</string>

@@ -1,14 +1,22 @@
 package android.lzy.a21habit;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -69,10 +77,32 @@ public class MainActivity extends AppCompatActivity {
 
     String ic;
 
+    String name;
+
+    boolean timeStatus;
+
+    //注册亮屏广播
+    IntentFilter filter;
+
+    ScreenBootReceiver receiver;
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(receiver);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //注册亮屏广播
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        receiver = new ScreenBootReceiver();
+        registerReceiver(receiver, filter);
+
         /*SimpleDateFormat df = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
         try {
             Log.w(TAG, "onCreate: " + DataUtil.daysBetween(df.parse("2018年9月28日"), df.parse("2018年9月30日")));
@@ -80,12 +110,23 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }*/
 
-        df = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
-        df_time = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Time).toString());
-        //LitePal.deleteAll(summarylist.class);
-        //loadImage();
+        initGlobalVariable();
         pickFile();
     }
+
+    private void initGlobalVariable(){
+        initDateFormat();
+    }
+
+    private void initDateFormat(){
+        df = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
+        df_time = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Time).toString());
+    }
+
+    private void doSpecificOperation(){
+
+    }
+
     void pickFile() {
         int permissionCheck = ContextCompat.checkSelfPermission(this,
                 READ_EXTERNAL_STORAGE);
@@ -104,8 +145,7 @@ public class MainActivity extends AppCompatActivity {
         }else {
             newPhotoFolder();
             initRecord();
-            isInProgress = isInProgressActivity();
-            initFloatingButton(isInProgress);
+            resetInterface();
         }
     }
 
@@ -123,8 +163,7 @@ public class MainActivity extends AppCompatActivity {
                         }else {
                             newPhotoFolder();
                             initRecord();
-                            isInProgress = isInProgressActivity();
-                            initFloatingButton(isInProgress);
+                            resetInterface();
                         }
                     }
                 }
@@ -133,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initFloatingButton(final boolean isInProgress){
+    private void initFloatingButton(){
         FloatingActionButton delete = (FloatingActionButton) findViewById(R.id.delete);
         if (isInProgress){
             delete.setVisibility(View.VISIBLE);
@@ -145,16 +184,16 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             deleteHabit();
-                            removeWidget();
-                            initFloatingButton(isInProgressActivity());
+                            //removeWidgetForNoInProgressActivity();
+                            resetInterface();
                         }
                     });
                     q.setNegativeButton(getResources().getText(R.string.BrokeHabit), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             brokeHabit();
-                            removeWidget();
-                            initFloatingButton(isInProgressActivity());
+                            //removeWidgetForNoInProgressActivity();
+                            resetInterface();
                         }
                     });
                     q.setMessage(getResources().getText(R.string.Q2));
@@ -175,12 +214,15 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             addImpulse(EnumStatus.IMPULSE_BROKEN_STATUS);
+                            resetInterface();
                         }
                     });
                     q.setNegativeButton(getResources().getText(R.string.No), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            addImpulse(EnumStatus.IMPULSE_INPROGRESS_STATUS);
+                            brokeHabit();
+                            //removeWidgetForNoInProgressActivity();
+                            resetInterface();
                         }
                     });
                     q.setMessage(getResources().getText(R.string.Q1));
@@ -245,10 +287,6 @@ public class MainActivity extends AppCompatActivity {
         if (!appPhotoRootPathFile.exists() || !appPhotoRootPathFile.isDirectory()) appPhotoRootPathFile.mkdirs();
     }
 
-    private void doSpecificOperation(){
-
-    }
-
     private void showImg(String uri, ImageView imageView){
         WindowManager manager = this.getWindowManager();
         DisplayMetrics outMetrics = new DisplayMetrics();
@@ -289,27 +327,20 @@ public class MainActivity extends AppCompatActivity {
     private boolean isInProgressActivity(){
         List<summarylist> summarylists = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
         if (summarylists.size() == 0) return false;
-        else {
-            initInProgressActivity();
-            return true;
-        }
+        else return true;
     }
 
     private void initInProgressActivity(){
         List<summarylist> summarylists = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
         ic = summarylists.get(0).getIc();
+        name = summarylists.get(0).getName();
         String date = df.format(System.currentTimeMillis());
         long days = DataUtil.daysBetween(summarylists.get(0).getOridate(), date);
-        summarylist summarylist = new summarylist();
-        summarylist.setLastdays((int)days);
-        summarylist.updateAll("ic = ?", ic);
+        dateTransformation(days);
         if (days > 21){
-            summarylist summarylist1 = new summarylist();
-            summarylist1.setEnddate(date);
-            summarylist1.setStatus(EnumStatus.FINISH_STATUS);
-            summarylist1.updateAll("ic = ?", ic);
-            removeWidget();
-            initFloatingButton(isInProgressActivity());
+            finishHabit(date);
+            //removeWidgetForNoInProgressActivity();
+            resetInterface();
         }else{
             lastdays = days;
             initLinearDays(days);
@@ -320,7 +351,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void removeWidget(){
+    private void dateTransformation(long days){
+        summarylist summarylist = new summarylist();
+        summarylist.setLastdays((int)days);
+        summarylist.updateAll("ic = ?", ic);
+    }
+
+    private void finishHabit(String date){
+        summarylist summarylist1 = new summarylist();
+        summarylist1.setEnddate(date);
+        summarylist1.setStatus(EnumStatus.FINISH_STATUS);
+        summarylist1.updateAll("ic = ?", ic);
+    }
+
+    private void removeWidgetForNoInProgressActivity(){
         ImageView imageView = (ImageView) findViewById(R.id.image);
         imageView.setVisibility(View.GONE);
         LinearLayout linear_days = (LinearLayout) findViewById(R.id.linear_days);
@@ -381,7 +425,6 @@ public class MainActivity extends AppCompatActivity {
         nameTextview.setVisibility(View.VISIBLE);
     }
 
-    boolean timeStatus;
     private void showPopueWindowForAddList() {
         final View popView = View.inflate(this, R.layout.popupwindow_addlist, null);
 
@@ -392,10 +435,10 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId){
                     case R.id.containtoday:
-                        timeStatus = false;
+                        timeStatus = EnumStatus.CONTAINTODAY;
                         break;
                     case R.id.startomorrow:
-                        timeStatus = true;
+                        timeStatus = EnumStatus.STARTOMMOROW;
                         break;
                 }
             }
@@ -430,9 +473,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 newHabit(addName.getText().toString(), timeStatus);
-                initInProgressActivity();
-                isInProgress = true;
-                initFloatingButton(isInProgress);
+                //initInProgressActivity();
+                resetInterface();
                 popupWindow.dismiss();
             }
         });
@@ -453,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
         long time_long = System.currentTimeMillis();
         String today = df.format(time_long);
         String time = df_time.format(time_long);
-        if (!timeStatus){
+        if (timeStatus == EnumStatus.CONTAINTODAY){
             summarylist.setOridate(today);
         }else {
             summarylist.setOridate(DataUtil.datePlus(today, 1));
@@ -463,6 +505,60 @@ public class MainActivity extends AppCompatActivity {
         summarylist.setListedtime(time);
         summarylist.setIc(name + Long.toString(time_long));
         summarylist.save();
+    }
+
+    private void resetInterface(){
+        isInProgress = isInProgressActivity();
+        if (isInProgress) {
+            initInProgressActivity();
+            castNotification();
+        }
+        else
+            removeWidgetForNoInProgressActivity();
+        initFloatingButton();
+    }
+
+    private void castNotification(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            //创建通知渠道
+            //CharSequence name = "渠道名称1";
+            String description = "渠道描述1";
+            String channelId="channelId1";//渠道id
+            int importance = NotificationManager.IMPORTANCE_LOW;//重要性级别
+            NotificationChannel mChannel = new NotificationChannel(channelId, name, importance);
+            mChannel.setDescription(description);//渠道描述
+            mChannel.enableLights(true);//是否显示通知指示灯
+            mChannel.enableVibration(true);//是否振动
+
+            NotificationManager notificationManager = (NotificationManager) getSystemService(
+                    NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(mChannel);//创建通知渠道
+            //第二个参数与channelId对应
+            Notification.Builder builder = new Notification.Builder(this,channelId);
+//icon title text必须包含，不然影响桌面图标小红点的展示
+            builder.setSmallIcon(R.mipmap.ic_launcher)
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                    .setContentTitle(getResources().getText(R.string.app_name))
+                    .setContentText(name)
+                    .setNumber(822); //久按桌面图标时允许的此条通知的数量
+
+            /*Intent intent=new Intent(this, MainActivity.class);
+            PendingIntent ClickPending = PendingIntent.getActivity(this, 0, intent, 0);
+            builder.setContentIntent(ClickPending);*/
+
+            notificationManager.notify(1,builder.build());
+        }else {
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setContentTitle(getResources().getText(R.string.app_name))
+                    .setContentText(name)
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                    .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+                    .build();
+            manager.notify(1, notification);
+        }
     }
 
 }
