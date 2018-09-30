@@ -25,7 +25,9 @@ public class ScreenBootReceiver extends BroadcastReceiver {
         if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
 
             summarylist summarylist = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(android.lzy.a21habit.summarylist.class).get(0);
+            int lastdays = summarylist.getLastdays() + 1;
             CharSequence name = summarylist.getName();
+            CharSequence name1 = context.getResources().getText(R.string.YouHavePersist).toString() + lastdays + context.getResources().getText(R.string.Day);
             //Toast.makeText(context, name, Toast.LENGTH_SHORT).show();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 //创建通知渠道
@@ -45,9 +47,9 @@ public class ScreenBootReceiver extends BroadcastReceiver {
 //icon title text必须包含，不然影响桌面图标小红点的展示
                 builder.setSmallIcon(R.mipmap.ic_launcher)
                         .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
-                        .setContentTitle(context.getResources().getText(R.string.app_name))
-                        .setContentText(name)
-                        .setNumber(822); //久按桌面图标时允许的此条通知的数量
+                        .setContentTitle(name)
+                        .setContentText(name1)
+                        .setNumber(lastdays); //久按桌面图标时允许的此条通知的数量
 
             Intent intent1=new Intent(context, MainActivity.class);
             PendingIntent ClickPending = PendingIntent.getActivity(context, 0, intent1, 0);
@@ -59,8 +61,8 @@ public class ScreenBootReceiver extends BroadcastReceiver {
                 PendingIntent pi = PendingIntent.getActivity(context, 0, intent1, 0);
                 NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
                 Notification notification = new NotificationCompat.Builder(context)
-                        .setContentTitle(context.getResources().getText(R.string.app_name))
-                        .setContentText(name)
+                        .setContentTitle(name)
+                        .setContentText(name1)
                         .setWhen(System.currentTimeMillis())
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentIntent(pi)

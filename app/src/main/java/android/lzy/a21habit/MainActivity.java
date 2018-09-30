@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
         ic = summarylists.get(0).getIc();
         name = summarylists.get(0).getName();
         String date = df.format(System.currentTimeMillis());
-        long days = DataUtil.daysBetween(summarylists.get(0).getOridate(), date);
+        long days = DataUtil.daysBetween(date, summarylists.get(0).getOridate());
         dateTransformation(days);
         if (days > 21){
             finishHabit(date);
@@ -378,9 +378,13 @@ public class MainActivity extends AppCompatActivity {
     public void loadImage(String originDate) {
         final ImageView imageView = (ImageView) findViewById(R.id.image);
         imageView.setVisibility(View.VISIBLE);
-        long photoNum = DataUtil.daysBetween(originDate, df.format(System.currentTimeMillis()));
+        long photoNum = DataUtil.daysBetween(df.format(System.currentTimeMillis()), originDate) + 1;
         final String uri = appPhotoRootPath + "/" + Long.toString(photoNum);
-        final String url = "http://7xr4g8.com1.z0.glb.clouddn.com/" + Long.toString(photoNum);
+        final String uri1 = appPhotoRootPath + "/" + Long.toString(photoNum - 1);
+        File file1 = new File(uri1);
+        if (file1.exists()) file1.delete();
+        //final String url = "http://7xr4g8.com1.z0.glb.clouddn.com/" + Long.toString(photoNum);
+        final String url = "https://source.unsplash.com/random";
         File file = new File(uri);
         if (!file.exists()){
             new Thread(new Runnable() {
@@ -507,6 +511,8 @@ public class MainActivity extends AppCompatActivity {
         summarylist.save();
     }
 
+
+
     private void resetInterface(){
         isInProgress = isInProgressActivity();
         if (isInProgress) {
@@ -518,7 +524,14 @@ public class MainActivity extends AppCompatActivity {
         initFloatingButton();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
     private void castNotification(){
+        CharSequence name1 = getResources().getText(R.string.YouHavePersist).toString() + (lastdays + 1) + getResources().getText(R.string.Day);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             //创建通知渠道
             //CharSequence name = "渠道名称1";
@@ -529,7 +542,6 @@ public class MainActivity extends AppCompatActivity {
             mChannel.setDescription(description);//渠道描述
             mChannel.enableLights(true);//是否显示通知指示灯
             mChannel.enableVibration(true);//是否振动
-
             NotificationManager notificationManager = (NotificationManager) getSystemService(
                     NOTIFICATION_SERVICE);
             notificationManager.createNotificationChannel(mChannel);//创建通知渠道
@@ -538,9 +550,9 @@ public class MainActivity extends AppCompatActivity {
 //icon title text必须包含，不然影响桌面图标小红点的展示
             builder.setSmallIcon(R.mipmap.ic_launcher)
                     .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
-                    .setContentTitle(getResources().getText(R.string.app_name))
-                    .setContentText(name)
-                    .setNumber(822); //久按桌面图标时允许的此条通知的数量
+                    .setContentTitle(name)
+                    .setContentText(name1)
+                    .setNumber((int)lastdays + 1); //久按桌面图标时允许的此条通知的数量
 
             /*Intent intent=new Intent(this, MainActivity.class);
             PendingIntent ClickPending = PendingIntent.getActivity(this, 0, intent, 0);
@@ -550,8 +562,8 @@ public class MainActivity extends AppCompatActivity {
         }else {
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             Notification notification = new NotificationCompat.Builder(this)
-                    .setContentTitle(getResources().getText(R.string.app_name))
-                    .setContentText(name)
+                    .setContentTitle(name)
+                    .setContentText(name1)
                     .setWhen(System.currentTimeMillis())
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))

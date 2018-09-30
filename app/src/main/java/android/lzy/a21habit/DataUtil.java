@@ -59,7 +59,7 @@ public class DataUtil {
         one = standardDate(one);
         two = standardDate(two);
         long difference =  (one.getTime()-two.getTime())/86400000;
-        return Math.abs(difference);
+        return difference;
     }
 
     public static Date standardDate(Date date){

@@ -9,6 +9,7 @@
     <string name="OriTime">起始时间：</string>
     <string name="ContainToday">包含今天</string>
     <string name="StartTomorrow">从明天开始</string>
+    <string name="YouHavePersist">你已经坚持到第</string>
     <string name="Confirm">确定</string>
     <string name="Cancel">取消</string>
     <string name="Yes">打破了</string>

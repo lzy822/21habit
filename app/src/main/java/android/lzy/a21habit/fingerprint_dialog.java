@@ -99,4 +99,8 @@ public class fingerprint_dialog extends AppCompatActivity {
         finish();
     }
 
+    public void onAuthenticated1() {
+        finish();
+    }
+
 }
