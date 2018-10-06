@@ -109,9 +109,9 @@ public class MainActivity extends AppCompatActivity {
         } catch (ParseException e) {
             e.printStackTrace();
         }*/
-
         initGlobalVariable();
         pickFile();
+        doSpecificOperation();
     }
 
     private void initGlobalVariable(){
@@ -124,7 +124,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doSpecificOperation(){
-
+        /*
+        增加一条记录
+         */
+        /*LitePal.deleteAll(summarylist.class);
+        LitePal.deleteAll(dailylist.class);
+        LitePal.deleteAll(impulselist.class);
+        String name = "不看论坛";
+        long time = System.currentTimeMillis();
+        int time_before = -7;
+        summarylist summarylist = new summarylist();
+        summarylist.setListedday(DataUtil.datePlus(df.format(time), time_before));
+        summarylist.setListedtime(df_time.format(time));
+        summarylist.setNum(0);
+        summarylist.setName(name);
+        summarylist.setIc(name + time);
+        summarylist.setOridate(DataUtil.datePlus(df.format(time), time_before));
+        summarylist.setLastdays(7);
+        summarylist.setStatus(EnumStatus.INPROGRESS_STATUS);
+        summarylist.save();*/
     }
 
     void pickFile() {
@@ -344,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
         }else{
             lastdays = days;
             initLinearDays(days);
-            initDescription(days);
+            initDescription(days + 1);
             initName(summarylists.get(0).getName());
             loadImage(summarylists.get(0).getOridate());
         }
