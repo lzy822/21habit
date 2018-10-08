@@ -71,8 +71,6 @@ public class ScreenBootReceiver extends BroadcastReceiver {
                         .build();
                 manager.notify(1, notification);
             }
-        }else if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())){
-            
         }
         //throw new UnsupportedOperationException("Not yet implemented");
     }
