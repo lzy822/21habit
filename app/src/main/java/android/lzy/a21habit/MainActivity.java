@@ -100,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
         //注册亮屏广播
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
         receiver = new ScreenBootReceiver();
         registerReceiver(receiver, filter);
 
