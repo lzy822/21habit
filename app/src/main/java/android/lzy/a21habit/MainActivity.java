@@ -399,12 +399,13 @@ public class MainActivity extends AppCompatActivity {
         final ImageView imageView = (ImageView) findViewById(R.id.image);
         imageView.setVisibility(View.VISIBLE);
         long photoNum = DataUtil.daysBetween(df.format(System.currentTimeMillis()), originDate) + 1;
-        final String uri = appPhotoRootPath + "/" + Long.toString(photoNum);
+        final String uri = appPhotoRootPath + "/" + Long.toString(photoNum)+ ".jpg";
         final String uri1 = appPhotoRootPath + "/" + Long.toString(photoNum - 1);
         File file1 = new File(uri1);
         if (file1.exists()) file1.delete();
         //final String url = "http://7xr4g8.com1.z0.glb.clouddn.com/" + Long.toString(photoNum);
-        final String url = "https://source.unsplash.com/random";
+        //final String url = "https://source.unsplash.com/random";
+        final String url = "http://120.79.77.39:822/1.jpg";
         File file = new File(uri);
         if (!file.exists()){
             new Thread(new Runnable() {
