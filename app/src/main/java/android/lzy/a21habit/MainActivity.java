@@ -24,6 +24,8 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -90,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(receiver);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.back).setVisible(false);
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -423,6 +431,32 @@ public class MainActivity extends AppCompatActivity {
         }else {
             showImg(uri, imageView);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.maintoolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        super.onOptionsItemSelected(item);
+        switch(item.getItemId())
+        {
+            case  R.id.back:
+                this.finish();
+                break;
+            case  R.id.calendar:
+                Intent intent = new Intent(this, CalendarActivity.class);
+                intent.putExtra("ic", ic);
+                startActivity(intent);
+                break;
+            default:
+                break;
+
+        }
+        return true;
     }
 
     private void initLinearDays(long days){
