@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.os.Build;
 import android.os.Environment;
@@ -40,6 +42,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.Transformation;
+import com.bumptech.glide.load.engine.Resource;
+import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
+import com.bumptech.glide.request.RequestOptions;
 import com.github.clans.fab.FloatingActionButton;
 
 import org.litepal.LitePal;
@@ -51,6 +58,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -321,11 +329,21 @@ public class MainActivity extends AppCompatActivity {
         manager.getDefaultDisplay().getMetrics(outMetrics);
         int width = outMetrics.widthPixels;
         int height = outMetrics.heightPixels;
-        Glide.with(this)
-                .load(uri)
+        RequestOptions options = new RequestOptions()
                 .centerCrop()
                 .override(width,height / 3)
-                .dontAnimate()
+                .dontAnimate();
+        Bitmap bitmap = DataUtil.getImageThumbnail(uri, width, height / 3);
+        int degree = DataUtil.getPicRotate(uri);
+        if (degree != 0) {
+            Matrix m = new Matrix();
+            m.setRotate(degree); // 旋转angle度
+            Log.w(TAG, "showPopueWindowForPhoto: " + degree);
+            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
+        }
+        Glide.with(this)
+                .load(bitmap)
+                .apply(options)
                 .into(imageView);
     }
 
