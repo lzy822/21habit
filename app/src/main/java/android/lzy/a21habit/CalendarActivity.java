@@ -51,6 +51,12 @@ public class CalendarActivity extends AppCompatActivity {
         materialCalendarView.setAllowClickDaysOutsideCurrentMonth(true);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        this.finish();
+    }
+
     private void showMaterialCalendarView(List<summarylist> list){
         MaterialCalendarView materialCalendarView = (MaterialCalendarView) findViewById(R.id.calendarView);
         materialCalendarView.setAllowClickDaysOutsideCurrentMonth(true);
@@ -58,13 +64,23 @@ public class CalendarActivity extends AppCompatActivity {
         materialCalendarView.setSelectionMode(MaterialCalendarView.SELECTION_MODE_MULTIPLE);
         SimpleDateFormat dateFormat = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
         try {
-            for (int k = 0; k < DataUtil.daysBetween(dateFormat.format(new Date(System.currentTimeMillis())), list.get(0).getOridate()); k++){
-                Date date = dateFormat.parse(DataUtil.datePlus(list.get(0).getOridate(), k));
+            long size = DataUtil.daysBetween(dateFormat.format(new Date(System.currentTimeMillis())), list.get(0).getOridate());
+            if (size >= 1) {
+                for (int k = 0; k < size; k++) {
+                    Date date = dateFormat.parse(DataUtil.datePlus(list.get(0).getOridate(), k));
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(date);
+                    LocalDate localDate = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DATE));
+                    CalendarDay calendarDay = CalendarDay.from(localDate);
+                    materialCalendarView.setDateSelected(calendarDay, true);
+                }
+            }else {
+                Date date = dateFormat.parse(DataUtil.datePlus(list.get(0).getOridate(), 0));
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(date);
                 LocalDate localDate = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DATE));
                 CalendarDay calendarDay = CalendarDay.from(localDate);
-                materialCalendarView.setDateSelected(calendarDay,true);
+                materialCalendarView.setDateSelected(calendarDay, true);
             }
         }catch (ParseException e){
             Log.w(TAG, e.toString());

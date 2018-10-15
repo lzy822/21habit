@@ -140,4 +140,11 @@ public class DataUtil {
         return degree;
     }
 
+    public static String getYMDString() {
+        Date date = new Date(System.currentTimeMillis());
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return Integer.toString(calendar.get(Calendar.YEAR)) + Integer.toString(calendar.get(Calendar.MONTH) + 1) + Integer.toString(calendar.get(Calendar.DATE));
+    }
+
 }

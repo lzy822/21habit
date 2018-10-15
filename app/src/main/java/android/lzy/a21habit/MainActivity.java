@@ -73,10 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    public static final String rootPath = Environment.getExternalStorageDirectory().toString();
-
-    public static final String appPhotoRootPath = rootPath + "/21Days/Photos";
-
     SimpleDateFormat df;
 
     SimpleDateFormat df_time;
@@ -97,29 +93,21 @@ public class MainActivity extends AppCompatActivity {
     ScreenBootReceiver receiver;
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(receiver);
-    }
-
-    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.back).setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        this.finish();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //注册亮屏广播
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_SCREEN_ON);
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(Intent.ACTION_USER_PRESENT);
-        receiver = new ScreenBootReceiver();
-        registerReceiver(receiver, filter);
 
         /*SimpleDateFormat df = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
         try {
@@ -179,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
             return;
         }else {
-            newPhotoFolder();
+            //newPhotoFolder();
             initRecord();
             resetInterface();
         }
@@ -197,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                             finish();
                             return;
                         }else {
-                            newPhotoFolder();
+                            //newPhotoFolder();
                             initRecord();
                             resetInterface();
                         }
@@ -222,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
                             deleteHabit();
                             //removeWidgetForNoInProgressActivity();
                             resetInterface();
+                            MainActivity.this.finish();
                         }
                     });
                     q.setNegativeButton(getResources().getText(R.string.BrokeHabit), new DialogInterface.OnClickListener() {
@@ -230,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
                             brokeHabit();
                             //removeWidgetForNoInProgressActivity();
                             resetInterface();
+                            MainActivity.this.finish();
                         }
                     });
                     q.setMessage(getResources().getText(R.string.Q2));
@@ -240,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
         }else{
             delete.setVisibility(View.GONE);
         }
+        /*
         FloatingActionButton add = (FloatingActionButton) findViewById(R.id.add);
         add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -268,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
                     showPopueWindowForAddList();
                 }
             }
-        });
+        });*/
     }
 
     private void addImpulse(int status){
@@ -318,58 +309,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void newPhotoFolder(){
-        File appPhotoRootPathFile = new File(appPhotoRootPath);
-        if (!appPhotoRootPathFile.exists() || !appPhotoRootPathFile.isDirectory()) appPhotoRootPathFile.mkdirs();
-    }
-
-    private void showImg(String uri, ImageView imageView){
-        WindowManager manager = this.getWindowManager();
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        manager.getDefaultDisplay().getMetrics(outMetrics);
-        int width = outMetrics.widthPixels;
-        int height = outMetrics.heightPixels;
-        RequestOptions options = new RequestOptions()
-                .centerCrop()
-                .override(width,height / 3)
-                .dontAnimate();
-        Bitmap bitmap = DataUtil.getImageThumbnail(uri, width, height / 3);
-        int degree = DataUtil.getPicRotate(uri);
-        if (degree != 0) {
-            Matrix m = new Matrix();
-            m.setRotate(degree); // 旋转angle度
-            Log.w(TAG, "showPopueWindowForPhoto: " + degree);
-            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
-        }
-        Glide.with(this)
-                .load(bitmap)
-                .apply(options)
-                .into(imageView);
-    }
-
-    //链接url下载图片
-    private static void downloadPicture(String urlList,String path) {
-        URL url = null;
-        try {
-            url = new URL(urlList);
-            DataInputStream dataInputStream = new DataInputStream(url.openStream());
-            FileOutputStream fileOutputStream = new FileOutputStream(new File(path));
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = dataInputStream.read(buffer)) > 0) {
-                output.write(buffer, 0, length);
-            }
-            fileOutputStream.write(output.toByteArray());
-            dataInputStream.close();
-            fileOutputStream.close();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private boolean isInProgressActivity(){
         List<summarylist> summarylists = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
         if (summarylists.size() == 0) return false;
@@ -377,7 +316,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initInProgressActivity(){
-        List<summarylist> summarylists = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
+        Intent intent = getIntent();
+        Log.w(TAG, "initInProgressActivity: " + intent.getStringExtra("ic"));
+        String mic = intent.getStringExtra("ic");
+        List<summarylist> summarylists = null;
+        if (mic != null) {
+            summarylists = LitePal.where("ic = ?", intent.getStringExtra("ic")).find(summarylist.class);
+        }else {
+            summarylists = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
+        }
         ic = summarylists.get(0).getIc();
         name = summarylists.get(0).getName();
         String date = df.format(System.currentTimeMillis());
@@ -392,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
             initLinearDays(days);
             initDescription(days + 1);
             initName(summarylists.get(0).getName());
-            loadImage(summarylists.get(0).getOridate());
+            //loadImage(summarylists.get(0).getOridate());
         }
 
     }
@@ -419,36 +366,6 @@ public class MainActivity extends AppCompatActivity {
         description.setVisibility(View.GONE);
         TextView nameTextview = (TextView) findViewById(R.id.name);
         nameTextview.setText(getResources().getText(R.string.NoPlan));
-    }
-
-    public void loadImage(String originDate) {
-        final ImageView imageView = (ImageView) findViewById(R.id.image);
-        imageView.setVisibility(View.VISIBLE);
-        long photoNum = DataUtil.daysBetween(df.format(System.currentTimeMillis()), originDate) + 1;
-        final String uri = appPhotoRootPath + "/" + Long.toString(photoNum)+ ".jpg";
-        final String uri1 = appPhotoRootPath + "/" + Long.toString(photoNum - 1);
-        File file1 = new File(uri1);
-        if (file1.exists()) file1.delete();
-        //final String url = "http://7xr4g8.com1.z0.glb.clouddn.com/" + Long.toString(photoNum);
-        //final String url = "https://source.unsplash.com/random";
-        final String url = "http://120.79.77.39:822/1.jpg";
-        File file = new File(uri);
-        if (!file.exists()){
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    downloadPicture(url, uri);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showImg(uri, imageView);
-                        }
-                    });
-                }
-            }).start();
-        }else {
-            showImg(uri, imageView);
-        }
     }
 
     @Override
@@ -591,8 +508,7 @@ public class MainActivity extends AppCompatActivity {
         if (isInProgress) {
             initInProgressActivity();
             //castNotification();
-            Intent startIntent = new Intent(this, MyService.class);
-            startService(startIntent);
+
         }
         else
             removeWidgetForNoInProgressActivity();

@@ -94,7 +94,7 @@ public class fingerprint_dialog extends AppCompatActivity {
     }
 
     public void onAuthenticated() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, DisplayAllHabitActivity.class);
         startActivity(intent);
         finish();
     }
