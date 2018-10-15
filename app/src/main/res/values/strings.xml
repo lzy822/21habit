@@ -11,6 +11,7 @@
     <string name="StartTomorrow">从明天开始</string>
     <string name="YouHavePersist">你已经坚持到第</string>
     <string name="Confirm">确定</string>
+    <string name="ConfirmHabitDone">你昨天保持习惯了吗？</string>
     <string name="Calendar">历史</string>
     <string name="Back">返回</string>
     <string name="Cancel">取消</string>

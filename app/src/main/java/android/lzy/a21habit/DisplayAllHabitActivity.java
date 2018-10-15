@@ -120,9 +120,10 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     private void initFloatingButton(){
         final FloatingActionButton add = (FloatingActionButton) findViewById(R.id.add);
+        Log.w(TAG, "initFloatingButton: " + isOKForAddHabit);
         if (!isOKForAddHabit) {
             add.setVisibility(View.GONE);
-        }
+        }else add.setVisibility(View.VISIBLE);
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

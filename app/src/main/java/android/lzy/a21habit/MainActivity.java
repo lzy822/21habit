@@ -358,8 +358,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void removeWidgetForNoInProgressActivity(){
-        ImageView imageView = (ImageView) findViewById(R.id.image);
-        imageView.setVisibility(View.GONE);
+        /*ImageView imageView = (ImageView) findViewById(R.id.image);
+        imageView.setVisibility(View.GONE);*/
         LinearLayout linear_days = (LinearLayout) findViewById(R.id.linear_days);
         linear_days.setVisibility(View.GONE);
         TextView description = (TextView) findViewById(R.id.description);

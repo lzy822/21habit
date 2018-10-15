@@ -16,13 +16,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.litepal.LitePal;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import static android.content.ContentValues.TAG;
@@ -41,27 +45,36 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     private OnRecyclerItemLongListener mOnItemLong;
 
     private OnRecyclerItemClickListener mOnItemClick;
+    SimpleDateFormat df;
+    SimpleDateFormat df_time;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         //private OnRecyclerItemLongListener mOnItemLong = null;
         CardView cardView;
         TextView lastDays;
         TextView habitName;
-        LinearLayout linearLayout;
+        LinearLayout linearLayout_Days;
+        LinearLayout linearLayout_Confirm;
+        ImageButton dontConfirmBT;
+        ImageButton ConfirmBT;
 
         public ViewHolder(View view) {
             super(view);
             cardView = (CardView) view;
             lastDays = (TextView) view.findViewById(R.id.day);
             habitName = (TextView) view.findViewById(R.id.name_txt);
-            linearLayout = (LinearLayout) view.findViewById(R.id.linear_days_cardview);
-
+            linearLayout_Days = (LinearLayout) view.findViewById(R.id.linear_days_cardview);
+            linearLayout_Confirm = (LinearLayout) view.findViewById(R.id.linear_confirm);
+            dontConfirmBT = (ImageButton) view.findViewById(R.id.dontFinishHabit);
+            ConfirmBT = (ImageButton) view.findViewById(R.id.FinishHabit);
 
 
         }
     }
     public HabitAdapter(List<summarylist> habitList) {
         this.habitList = habitList;
+        df = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
+        df_time = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Time).toString());
     }
 
     @Override
@@ -112,14 +125,118 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        summarylist habit = habitList.get(position);
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
+        final summarylist habit = habitList.get(position);
         holder.cardView.setCardBackgroundColor(Color.WHITE);
         String name = habit.getName();
         if (!name.equals(mContext.getResources().getString(R.string.NoPlan))){
-            holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
-        }else holder.linearLayout.setVisibility(View.GONE);
+            final long days_listed = habit.getLastdays();
+
+            final String date = df.format(System.currentTimeMillis());
+            long days_reality = DataUtil.daysBetween(date, habit.getOridate());
+
+            if (days_listed != days_reality){
+                holder.linearLayout_Confirm.setVisibility(View.VISIBLE);
+                holder.dontConfirmBT.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        brokeHabit(habit.getIc(), days_listed);
+                        holder.linearLayout_Confirm.setVisibility(View.GONE);
+
+                        habitList = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
+                        if (habitList.size() == 0){
+                            summarylist summarylist1 = new summarylist();
+                            summarylist1.setName(mContext.getResources().getString(R.string.NoPlan));
+                            habitList.add(summarylist1);
+                        }
+                        notifyItemChanged(position);
+                    }
+                });
+                holder.ConfirmBT.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
+                        long days = DataUtil.daysBetween(date, habit.getOridate());
+                        dateTransformation(days, habit.getIc());
+                        holder.linearLayout_Confirm.setVisibility(View.GONE);
+                        holder.linearLayout_Days.setVisibility(View.VISIBLE);
+                        //notifyItemChanged(position);
+                    }
+                });
+            }else {
+                holder.linearLayout_Confirm.setVisibility(View.GONE);
+                holder.linearLayout_Days.setVisibility(View.VISIBLE);
+                long days_show = days_listed + 1;
+                if (days_show > 0 && days_show <= 7){
+                    holder.lastDays.setTextColor(Color.RED);
+                    holder.habitName.setTextColor(Color.RED);
+                }else if (days_show > 7 && days_show <= 14){
+                    holder.lastDays.setTextColor(Color.rgb(233, 150, 122));
+                    holder.habitName.setTextColor(Color.rgb(233, 150, 122));
+                }else if (days_show > 14 && days_show <= 22){
+                    holder.lastDays.setTextColor(Color.GREEN);
+                    holder.habitName.setTextColor(Color.GREEN);
+                }
+                holder.lastDays.setText(Long.toString(days_show));
+            }
+            if (days_listed >= 21){
+                finishHabit(date, habit.getIc());
+                holder.linearLayout_Confirm.setVisibility(View.GONE);
+
+                habitList = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
+                if (habitList.size() == 0){
+                    summarylist summarylist1 = new summarylist();
+                    summarylist1.setName(mContext.getResources().getString(R.string.NoPlan));
+                    habitList.add(summarylist1);
+                }
+                notifyItemChanged(position);
+            }
+
+
+        }else {
+            holder.linearLayout_Days.setVisibility(View.GONE);
+            holder.linearLayout_Confirm.setVisibility(View.GONE);
+
+        }
         holder.habitName.setText(habit.getName());
+    }
+
+    private void dateTransformation(long days, String ic){
+        summarylist summarylist = new summarylist();
+        summarylist.setLastdays((int)days);
+        summarylist.updateAll("ic = ?", ic);
+    }
+
+    private void finishHabit(String date, String ic){
+        summarylist summarylist1 = new summarylist();
+        summarylist1.setEnddate(date);
+        summarylist1.setStatus(EnumStatus.FINISH_STATUS);
+        summarylist1.updateAll("ic = ?", ic);
+    }
+
+    private void addImpulse(int status, String ic, long lastdays){
+        long num = LitePal.findAll(impulselist.class).size();
+        impulselist impulselist = new impulselist();
+        long time = System.currentTimeMillis();
+        impulselist.setNum(num);
+        impulselist.setIc(ic);
+        impulselist.setLastdays((int)lastdays);
+        impulselist.setTime(df_time.format(time));
+        impulselist.setStatus(status);
+        impulselist.save();
+    }
+
+    private void brokeHabit(String ic, long lastdays){
+        addImpulse(EnumStatus.IMPULSE_BROKEN_STATUS, ic, lastdays);
+        summarylist summarylist = new summarylist();
+        long time_long = System.currentTimeMillis();
+        String date = df.format(time_long);
+        summarylist.setEnddate(date);
+        summarylist.setStatus(EnumStatus.BROKEN_STATUS);
+        summarylist.setLastdays((int)lastdays);
+        summarylist.setBreakdate(date);
+        summarylist.setBreaktime(df_time.format(time_long));
+        summarylist.updateAll("ic = ?", ic);
     }
 
     @Override

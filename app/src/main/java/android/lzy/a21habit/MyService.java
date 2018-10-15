@@ -10,12 +10,14 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import org.litepal.LitePal;
 
 import java.util.List;
 
 public class MyService extends Service {
+    private static final String TAG = "MyService";
     public MyService() {
     }
 
@@ -28,8 +30,9 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         List<summarylist> summarylist = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(android.lzy.a21habit.summarylist.class);
-        for (int i = 0; i < summarylist.size(); i++) {
+        for (int i = 0; i < summarylist.size() - 1; i++) {
             int lastdays = summarylist.get(i).getLastdays() + 1;
             CharSequence name = summarylist.get(i).getName();
             CharSequence name1 = this.getResources().getText(R.string.YouHavePersist).toString() + lastdays + this.getResources().getText(R.string.Day);
@@ -58,8 +61,8 @@ public class MyService extends Service {
                 Intent intent1 = new Intent(this, DisplayAllHabitActivity.class);
                 PendingIntent ClickPending = PendingIntent.getActivity(this, 0, intent1, 0);
                 builder.setContentIntent(ClickPending);
-                //notificationManager.notify(1,builder.build());
-                startForeground(1, builder.build());
+                //notificationManager.notify(i + 1, builder.build());
+                startForeground(i + 1, builder.build());
             } else {
                 Intent intent1 = new Intent(this, DisplayAllHabitActivity.class);
                 PendingIntent pi = PendingIntent.getActivity(this, 0, intent1, 0);
@@ -73,7 +76,7 @@ public class MyService extends Service {
                         .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
                         .build();
                 //manager.notify(1, notification);
-                startForeground(1, notification);
+                startForeground(i + 1, notification);
             }
         }
     }

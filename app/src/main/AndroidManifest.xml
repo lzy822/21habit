@@ -60,7 +60,8 @@
             android:exported="true" />
 
         <activity android:name=".CalendarActivity" />
-        <activity android:name=".DisplayAllHabitActivity">
+        <activity android:name=".DisplayAllHabitActivity"
+            android:launchMode="singleTop">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -53,13 +53,13 @@ public class ScreenBootReceiver extends BroadcastReceiver {
                             .setContentText(name1)
                             .setNumber(lastdays); //久按桌面图标时允许的此条通知的数量
 
-                    Intent intent1=new Intent(context, MainActivity.class);
+                    Intent intent1=new Intent(context, DisplayAllHabitActivity.class);
                     PendingIntent ClickPending = PendingIntent.getActivity(context, 0, intent1, 0);
                     builder.setContentIntent(ClickPending);
 
-                    notificationManager.notify(1,builder.build());
+                    notificationManager.notify(i + 1, builder.build());
                 }else {
-                    Intent intent1 = new Intent(context, MainActivity.class);
+                    Intent intent1 = new Intent(context, DisplayAllHabitActivity.class);
                     PendingIntent pi = PendingIntent.getActivity(context, 0, intent1, 0);
                     NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
                     Notification notification = new NotificationCompat.Builder(context)
@@ -71,7 +71,7 @@ public class ScreenBootReceiver extends BroadcastReceiver {
                             .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
                             .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
                             .build();
-                    manager.notify(1, notification);
+                    manager.notify(i + 1, notification);
                 }
             }
         }
