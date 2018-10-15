@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             deleteHabit();
                             //removeWidgetForNoInProgressActivity();
-                            resetInterface();
+                            //resetInterface();
                             MainActivity.this.finish();
                         }
                     });
@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             brokeHabit();
                             //removeWidgetForNoInProgressActivity();
-                            resetInterface();
+                            //resetInterface();
                             MainActivity.this.finish();
                         }
                     });

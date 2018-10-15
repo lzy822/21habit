@@ -83,6 +83,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         initGlobalVariable();
         refreshRecycler();
         initFloatingButton();
