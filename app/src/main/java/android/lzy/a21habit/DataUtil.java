@@ -2,6 +2,7 @@ package android.lzy.a21habit;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.icu.text.TimeZoneFormat;
 import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.util.Log;
@@ -12,6 +13,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class DataUtil {
 
@@ -63,7 +65,15 @@ public class DataUtil {
         }
         one = standardDate(one);
         two = standardDate(two);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(one);
+        Calendar calendar1 = Calendar.getInstance();
+        calendar1.setTime(two);
+        Log.w(TAG, "daysBetween: " + calendar.compareTo(calendar1));
+
         long difference =  (one.getTime()-two.getTime())/86400000;
+        Log.w(TAG, "daysBetween origin: " + difference);
         return difference;
     }
 

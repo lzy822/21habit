@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -109,7 +111,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     private boolean isOKForAddHabit(){
         List<summarylist> summarylists = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
         if (summarylists.size() == 0) return true;
-        else if (summarylists.size() == 1 && summarylists.get(0).getLastdays() > 14) return true;
+        else if (summarylists.size() == 1 && summarylists.get(0).getLastdays() >= 14) return true;
         else return false;
     }
 
@@ -143,8 +145,10 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         String time = df_time.format(time_long);
         if (timeStatus == EnumStatus.CONTAINTODAY){
             summarylist.setOridate(today);
+            summarylist.setLastdays(0);
         }else {
             summarylist.setOridate(DataUtil.datePlus(today, 1));
+            summarylist.setLastdays(-1);
         }
         summarylist.setStatus(EnumStatus.INPROGRESS_STATUS);
         summarylist.setListedday(today);
@@ -342,6 +346,22 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         }
     }
 
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == 1221) {
+                Log.w(TAG, "handleMessage: " + "1221");
+                refreshRecycler();
+                refreshIsOKForAddHabit();
+                initFloatingButton();
+            } else if (msg.what == 2112) {
+                Log.w(TAG, "handleMessage: " + "2112");
+            }
+
+        }
+    };
+
     //重新刷新Recycler
     public void refreshRecycler(){
         summarylist = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(android.lzy.a21habit.summarylist.class);
@@ -358,7 +378,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
             summarylist1.setName(this.getResources().getString(R.string.NoPlan));
             summarylist.add(summarylist1);
         }
-        HabitAdapter adapter = new HabitAdapter(summarylist);
+        HabitAdapter adapter = new HabitAdapter(summarylist, handler);
         adapter.setOnItemLongClickListener(new HabitAdapter.OnRecyclerItemLongListener() {
             @Override
             public void onItemLongClick(View view, String ic, int position) {

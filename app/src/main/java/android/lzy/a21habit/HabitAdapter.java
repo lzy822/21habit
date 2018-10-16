@@ -1,5 +1,6 @@
 package android.lzy.a21habit;
 
+import android.app.Notification;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -10,6 +11,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -39,6 +42,8 @@ import static android.content.Context.MODE_PRIVATE;
 
 public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> {
     private Context mContext;
+
+    Handler handler;
 
     private List<summarylist> habitList;
 
@@ -71,10 +76,11 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
         }
     }
-    public HabitAdapter(List<summarylist> habitList) {
+    public HabitAdapter(List<summarylist> habitList, Handler handler) {
         this.habitList = habitList;
         df = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
         df_time = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Time).toString());
+        this.handler = handler;
     }
 
     @Override
@@ -128,12 +134,17 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final summarylist habit = habitList.get(position);
         holder.cardView.setCardBackgroundColor(Color.WHITE);
+
         String name = habit.getName();
         if (!name.equals(mContext.getResources().getString(R.string.NoPlan))){
+
+
             final long days_listed = habit.getLastdays();
 
             final String date = df.format(System.currentTimeMillis());
             long days_reality = DataUtil.daysBetween(date, habit.getOridate());
+            Log.w(TAG, "onBindViewHolder: " + days_reality + ";" + days_listed + ";" + habit.getOridate());
+
 
             if (days_listed != days_reality){
                 holder.linearLayout_Confirm.setVisibility(View.VISIBLE);
@@ -149,7 +160,12 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
                             summarylist1.setName(mContext.getResources().getString(R.string.NoPlan));
                             habitList.add(summarylist1);
                         }
-                        notifyItemChanged(position);
+                        //notifyItemChanged(position);
+
+                        Message msg = new Message();
+                        msg.what = 1221;
+                        handler.sendMessage(msg);
+
                     }
                 });
                 holder.ConfirmBT.setOnClickListener(new View.OnClickListener() {
@@ -158,27 +174,15 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
                         holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
                         long days = DataUtil.daysBetween(date, habit.getOridate());
                         dateTransformation(days, habit.getIc());
-                        holder.linearLayout_Confirm.setVisibility(View.GONE);
-                        holder.linearLayout_Days.setVisibility(View.VISIBLE);
+                        refreshLastDays(holder, days_listed + 1, habit);
                         //notifyItemChanged(position);
                     }
                 });
             }else {
-                holder.linearLayout_Confirm.setVisibility(View.GONE);
-                holder.linearLayout_Days.setVisibility(View.VISIBLE);
-                long days_show = days_listed + 1;
-                if (days_show > 0 && days_show <= 7){
-                    holder.lastDays.setTextColor(Color.RED);
-                    holder.habitName.setTextColor(Color.RED);
-                }else if (days_show > 7 && days_show <= 14){
-                    holder.lastDays.setTextColor(Color.rgb(233, 150, 122));
-                    holder.habitName.setTextColor(Color.rgb(233, 150, 122));
-                }else if (days_show > 14 && days_show <= 22){
-                    holder.lastDays.setTextColor(Color.GREEN);
-                    holder.habitName.setTextColor(Color.GREEN);
-                }
-                holder.lastDays.setText(Long.toString(days_show));
+                refreshLastDays(holder, days_listed, habit);
             }
+
+
             if (days_listed >= 21){
                 finishHabit(date, habit.getIc());
                 holder.linearLayout_Confirm.setVisibility(View.GONE);
@@ -196,8 +200,27 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
         }else {
             holder.linearLayout_Days.setVisibility(View.GONE);
             holder.linearLayout_Confirm.setVisibility(View.GONE);
-
         }
+
+
+        holder.habitName.setText(habit.getName());
+    }
+
+    private void refreshLastDays(final ViewHolder holder, final long days_listed, final summarylist habit){
+        holder.linearLayout_Confirm.setVisibility(View.GONE);
+        holder.linearLayout_Days.setVisibility(View.VISIBLE);
+        long days_show = days_listed + 1;
+        if (days_show > 0 && days_show <= 7){
+            holder.lastDays.setTextColor(Color.RED);
+            holder.habitName.setTextColor(Color.RED);
+        }else if (days_show > 7 && days_show <= 14){
+            holder.lastDays.setTextColor(Color.rgb(233, 150, 122));
+            holder.habitName.setTextColor(Color.rgb(233, 150, 122));
+        }else if (days_show > 14 && days_show <= 22){
+            holder.lastDays.setTextColor(Color.GREEN);
+            holder.habitName.setTextColor(Color.GREEN);
+        }
+        holder.lastDays.setText(Long.toString(days_show));
         holder.habitName.setText(habit.getName());
     }
 
