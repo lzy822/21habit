@@ -216,7 +216,14 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                             deleteHabit(longClickedHabitIc);
                             //removeWidgetForNoInProgressActivity();
                             //resetInterface();
-                            DisplayAllHabitActivity.this.finish();
+                            //DisplayAllHabitActivity.this.finish();
+                            initGlobalVariable();
+                            refreshRecycler();
+                            initFloatingButton();
+                            loadImage();
+                            invalidateOptionsMenu();
+                            Intent startIntent = new Intent(DisplayAllHabitActivity.this, MyService.class);
+                            startService(startIntent);
                         }
                     });
                     q.setNegativeButton(getResources().getText(R.string.BrokeHabit), new DialogInterface.OnClickListener() {
@@ -225,7 +232,15 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                             brokeHabit(longClickedHabitIc);
                             //removeWidgetForNoInProgressActivity();
                             //resetInterface();
-                            DisplayAllHabitActivity.this.finish();
+                            //DisplayAllHabitActivity.this.finish();
+
+                            initGlobalVariable();
+                            refreshRecycler();
+                            initFloatingButton();
+                            loadImage();
+                            invalidateOptionsMenu();
+                            Intent startIntent = new Intent(DisplayAllHabitActivity.this, MyService.class);
+                            startService(startIntent);
                         }
                     });
                     q.setMessage(getResources().getText(R.string.Q2));
