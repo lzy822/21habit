@@ -90,6 +90,7 @@ public class CalendarActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.calendar).setVisible(false);
+        menu.findItem(R.id.delete_item).setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 

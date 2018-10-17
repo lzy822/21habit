@@ -110,7 +110,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
                     int position = holder.getAdapterPosition();
                     summarylist habit = habitList.get(position);
                     mOnItemLong.onItemLongClick(v, habit.getIc(), position);
-                    holder.cardView.setCardBackgroundColor(Color.GRAY);
+                    holder.cardView.setCardBackgroundColor(Color.RED);
                }
                 return true;
             }

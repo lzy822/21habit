@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteBlobTooBigException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -13,14 +14,18 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -63,13 +68,23 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     SimpleDateFormat df_time;
 
+    Toolbar toolbar;
+
     public static final String rootPath = Environment.getExternalStorageDirectory().toString();
 
     public static final String appPhotoRootPath = rootPath + "/21Days/Photos";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_all_habit);
+
+
+        isLongClick = 1;
+        longClickedPosition = -1;
+        longClickedHabitIc = "";
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         pickFile();
 
 
@@ -90,6 +105,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         refreshRecycler();
         initFloatingButton();
         loadImage();
+        invalidateOptionsMenu();
         Intent startIntent = new Intent(this, MyService.class);
         startService(startIntent);
     }
@@ -99,6 +115,9 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     }
 
     private void initGlobalVariable(){
+        isLongClick = 1;
+        longClickedPosition = -1;
+        longClickedHabitIc = "";
         refreshIsOKForAddHabit();
         initDateFormat();
     }
@@ -113,6 +132,125 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         if (summarylists.size() == 0) return true;
         else if (summarylists.size() == 1 && summarylists.get(0).getLastdays() >= 14) return true;
         else return false;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        //toolbar = (Toolbar) findViewById(R.id.toolbar);
+        switch (isLongClick){
+            case 1:
+                toolbar.setBackgroundColor(Color.rgb(128, 128, 128));
+                menu.findItem(R.id.delete_item).setVisible(false);
+                menu.findItem(R.id.back).setVisible(false);
+                menu.findItem(R.id.calendar).setVisible(false);
+                break;
+            case 0:
+                toolbar.setBackgroundColor(Color.rgb(233, 150, 122));
+                menu.findItem(R.id.delete_item).setVisible(true);
+                menu.findItem(R.id.back).setVisible(true);
+                menu.findItem(R.id.calendar).setVisible(true);
+                break;
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //getMenuInflater().inflate(R.menu.options, menu);
+        getMenuInflater().inflate(R.menu.maintoolbar, menu);
+        return true;
+    }
+
+
+
+    private void deleteHabit(String ic){
+        LitePal.deleteAll(summarylist.class, "ic = ?", ic);
+        LitePal.deleteAll(dailylist.class, "ic = ?", ic);
+        LitePal.deleteAll(impulselist.class, "ic = ?", ic);
+    }
+
+
+
+    private void addImpulse(int status, String ic){
+        long num = LitePal.findAll(impulselist.class).size();
+        impulselist impulselist = new impulselist();
+        long time = System.currentTimeMillis();
+        List<summarylist> summarylists = LitePal.where("ic = ?").find(summarylist.class);
+        if (summarylists.size() != 0) {
+            impulselist.setNum(num);
+            impulselist.setIc(ic);
+            impulselist.setLastdays(summarylists.get(0).getLastdays());
+            impulselist.setTime(df_time.format(time));
+            impulselist.setStatus(status);
+            impulselist.save();
+        }
+    }
+
+    private void brokeHabit(String ic){
+        addImpulse(EnumStatus.IMPULSE_BROKEN_STATUS, ic);
+        summarylist summarylist = new summarylist();
+        long time_long = System.currentTimeMillis();
+        String date = df.format(time_long);
+        List<summarylist> summarylists = LitePal.where("ic = ?").find(summarylist.class);
+        if (summarylists.size() != 0) {
+            summarylist.setEnddate(date);
+            summarylist.setStatus(EnumStatus.BROKEN_STATUS);
+            summarylist.setLastdays(summarylists.get(0).getLastdays());
+            summarylist.setBreakdate(date);
+            summarylist.setBreaktime(df_time.format(time_long));
+            summarylist.updateAll("ic = ?", ic);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        super.onOptionsItemSelected(item);
+        switch(item.getItemId())
+        {
+            case  R.id.delete_item:
+                if (isLongClick == 0) {
+                    AlertDialog.Builder q = new AlertDialog.Builder(DisplayAllHabitActivity.this);
+                    q.setPositiveButton(getResources().getText(R.string.DeleteHabit), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            deleteHabit(longClickedHabitIc);
+                            //removeWidgetForNoInProgressActivity();
+                            //resetInterface();
+                            DisplayAllHabitActivity.this.finish();
+                        }
+                    });
+                    q.setNegativeButton(getResources().getText(R.string.BrokeHabit), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            brokeHabit(longClickedHabitIc);
+                            //removeWidgetForNoInProgressActivity();
+                            //resetInterface();
+                            DisplayAllHabitActivity.this.finish();
+                        }
+                    });
+                    q.setMessage(getResources().getText(R.string.Q2));
+                    q.setTitle(getResources().getText(R.string.Warning));
+                    q.show();
+                }
+                break;
+            case  R.id.back:
+                if (isLongClick == 0) {
+                    isLongClick = 1;
+                    longClickedHabitIc = "";
+                    longClickedPosition = -1;
+                    refreshRecycler();
+                    invalidateOptionsMenu();
+                }
+                break;
+            case  R.id.calendar:
+                if (isLongClick == 0) {
+                    Intent intent = new Intent(this, CalendarActivity.class);
+                    intent.putExtra("ic", longClickedHabitIc);
+                    startActivity(intent);
+                }
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -362,6 +500,10 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         }
     };
 
+    private int isLongClick;
+    private String longClickedHabitIc;
+    private int longClickedPosition;
+
     //重新刷新Recycler
     public void refreshRecycler(){
         summarylist = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(android.lzy.a21habit.summarylist.class);
@@ -378,21 +520,29 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
             summarylist1.setName(this.getResources().getString(R.string.NoPlan));
             summarylist.add(summarylist1);
         }
-        HabitAdapter adapter = new HabitAdapter(summarylist, handler);
+        final HabitAdapter adapter = new HabitAdapter(summarylist, handler);
         adapter.setOnItemLongClickListener(new HabitAdapter.OnRecyclerItemLongListener() {
             @Override
             public void onItemLongClick(View view, String ic, int position) {
-
+                isLongClick = 0;
+                longClickedHabitIc = ic;
+                longClickedPosition = position;
+                invalidateOptionsMenu();
             }
         });
         adapter.setOnItemClickListener(new HabitAdapter.OnRecyclerItemClickListener() {
             @Override
             public void onItemClick(View view, String ic, int position) {
+                HabitAdapter.ViewHolder holder = new HabitAdapter.ViewHolder(view);
                 summarylist habit = summarylist.get(position);
-                if (!habit.getName().equals(DisplayAllHabitActivity.this.getResources().getString(R.string.NoPlan))){
+                /*if (!habit.getName().equals(DisplayAllHabitActivity.this.getResources().getString(R.string.NoPlan))){
                     Intent intent = new Intent(DisplayAllHabitActivity.this, MainActivity.class);
                     intent.putExtra("ic", ic);
                     startActivity(intent);
+                }*/
+                if (isLongClick == 0 && !longClickedHabitIc.equals(ic)){
+                    adapter.notifyItemChanged(longClickedPosition);
+                    holder.cardView.setCardBackgroundColor(Color.RED);
                 }
             }
         });
