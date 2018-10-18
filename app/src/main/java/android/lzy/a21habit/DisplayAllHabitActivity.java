@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class DisplayAllHabitActivity extends AppCompatActivity {
@@ -108,6 +109,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         invalidateOptionsMenu();
         Intent startIntent = new Intent(this, MyService.class);
         startService(startIntent);
+
+        Log.w(TAG, "onCreate: " + DataUtil.daysBetween(df.format(new Date(System.currentTimeMillis())), df.format(new Date(System.currentTimeMillis()))));
     }
 
     private void refreshIsOKForAddHabit(){

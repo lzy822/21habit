@@ -142,7 +142,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
             final long days_listed = habit.getLastdays();
 
             final String date = df.format(System.currentTimeMillis());
-            long days_reality = DataUtil.daysBetween(date, habit.getOridate());
+            final long days_reality = DataUtil.daysBetween(date, habit.getOridate());
             Log.w(TAG, "onBindViewHolder: " + days_reality + ";" + days_listed + ";" + habit.getOridate());
 
 
@@ -171,11 +171,14 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
                 holder.ConfirmBT.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
-                        long days = DataUtil.daysBetween(date, habit.getOridate());
-                        dateTransformation(days, habit.getIc());
+                        //holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
+                        //long days = DataUtil.daysBetween(date, habit.getOridate());
+                        dateTransformation(days_reality, habit.getIc());
                         refreshLastDays(holder, days_listed + 1, habit);
                         //notifyItemChanged(position);
+                        Message msg = new Message();
+                        msg.what = 1221;
+                        handler.sendMessage(msg);
                     }
                 });
             }else {
