@@ -1,5 +1,8 @@
 package android.lzy.a21habit;
 
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -8,6 +11,8 @@ import android.database.sqlite.SQLiteBlobTooBigException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -52,6 +57,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class DisplayAllHabitActivity extends AppCompatActivity {
     private static final String TAG = "DisplayAllHabitActivity";
     public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE";
@@ -73,13 +82,18 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     public static final String rootPath = Environment.getExternalStorageDirectory().toString();
 
+    public static final String serverRootPath = "http://120.79.77.39:822/";
+
     public static final String appPhotoRootPath = rootPath + "/21Days/Photos";
+
+    public static final String appApkRootPath = rootPath + "/21Days/Apk/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_all_habit);
-
+        Log.w(TAG, "onCreate: " + DataUtil.getVersionCode(this) + "; " + DataUtil.getVerName(this));
+        sendRequestWithOkHttp();
 
         isLongClick = 1;
         longClickedPosition = -1;
@@ -96,6 +110,36 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         filter.addAction(Intent.ACTION_USER_PRESENT);
         receiver = new ScreenBootReceiver();
         registerReceiver(receiver, filter);
+
+    }
+
+    private void sendRequestWithOkHttp(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder()
+                            .url("http://120.79.77.39:822/VersionInfo.txt")
+                            .build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    Log.w(TAG, "run: " + getVersionInfo(responseData));
+                    Message msg = new Message();
+                    msg.what = 1234;
+                    Bundle bundle = new Bundle();
+                    bundle.putString("version", getVersionInfo(responseData));
+                    msg.setData(bundle);
+                    handler.sendMessage(msg);
+                }catch (Exception e){
+                    Log.w(TAG, e.toString());
+                }
+            }
+        }).start();
+    }
+
+    private String getVersionInfo(String data){
+        return data.substring(data.indexOf("<version>") + 9, data.indexOf("</version>"));
     }
 
     @Override
@@ -175,10 +219,10 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
 
     private void addImpulse(int status, String ic){
-        long num = LitePal.findAll(impulselist.class).size();
+        long num = LitePal.where("ic = ?", ic).find(impulselist.class).size();
         impulselist impulselist = new impulselist();
         long time = System.currentTimeMillis();
-        List<summarylist> summarylists = LitePal.where("ic = ?").find(summarylist.class);
+        List<summarylist> summarylists = LitePal.where("ic = ?", ic).find(summarylist.class);
         if (summarylists.size() != 0) {
             impulselist.setNum(num);
             impulselist.setIc(ic);
@@ -194,7 +238,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         summarylist summarylist = new summarylist();
         long time_long = System.currentTimeMillis();
         String date = df.format(time_long);
-        List<summarylist> summarylists = LitePal.where("ic = ?").find(summarylist.class);
+        List<summarylist> summarylists = LitePal.where("ic = ?", ic).find(summarylist.class);
         if (summarylists.size() != 0) {
             summarylist.setEnddate(date);
             summarylist.setStatus(EnumStatus.BROKEN_STATUS);
@@ -301,7 +345,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         String time = df_time.format(time_long);
         if (timeStatus == EnumStatus.CONTAINTODAY){
             summarylist.setOridate(today);
-            summarylist.setLastdays(0);
+            summarylist.setToDefault("lastdays");
         }else {
             summarylist.setOridate(DataUtil.datePlus(today, 1));
             summarylist.setLastdays(-1);
@@ -513,10 +557,55 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 initFloatingButton();
             } else if (msg.what == 2112) {
                 Log.w(TAG, "handleMessage: " + "2112");
+            }else if (msg.what == 1234) {
+                Bundle bundle = msg.getData();
+                final String version = bundle.getString("version");
+                Log.w(TAG, "handleMessage: " + version + "; " + DataUtil.getVerName(DisplayAllHabitActivity.this));
+                if (!version.equals(DataUtil.getVerName(DisplayAllHabitActivity.this))){
+                    AlertDialog.Builder q = new AlertDialog.Builder(DisplayAllHabitActivity.this);
+                    q.setPositiveButton(getResources().getText(R.string.No), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    q.setNegativeButton(getResources().getText(R.string.Confirm), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String apkName = "21habitV" + version + ".apk";
+                            String apkUrl = serverRootPath + apkName;
+                            installNormal(DisplayAllHabitActivity.this, apkUrl);
+                        }
+                    });
+                    q.setMessage(getResources().getText(R.string.Q3));
+                    q.setTitle(getResources().getText(R.string.Warning));
+                    q.show();
+
+                }
             }
 
         }
     };
+
+    //普通安装
+    private void installNormal(Context context, String apkUrl) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        //版本在7.0以上是不能直接通过uri访问的
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+            //File file = (new File(apkUrl));
+            // 由于没有在Activity环境下启动Activity,设置下面的标签
+            //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            //参数1 上下文, 参数2 Provider主机地址 和配置文件中保持一致   参数3  共享的文件
+            Uri apkUri = Uri.parse(apkUrl);
+            //添加这一句表示对目标应用临时授权该Uri所代表的文件
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+        } else {
+            intent.setDataAndType(Uri.fromFile(new File(apkUrl)),
+                    "application/vnd.android.package-archive");
+        }
+        context.startActivity(intent);
+    }
 
     private int isLongClick;
     private String longClickedHabitIc;

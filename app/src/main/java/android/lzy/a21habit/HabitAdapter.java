@@ -168,11 +168,13 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
                     }
                 });
+
                 holder.ConfirmBT.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         //holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
                         //long days = DataUtil.daysBetween(date, habit.getOridate());
+                        Log.w(TAG, "onBindViewHolder: " + days_reality);
                         dateTransformation(days_reality, habit.getIc());
                         refreshLastDays(holder, days_listed + 1, habit);
                         //notifyItemChanged(position);
@@ -181,6 +183,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
                         handler.sendMessage(msg);
                     }
                 });
+
             }else {
                 refreshLastDays(holder, days_listed, habit);
             }
@@ -229,7 +232,10 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
     private void dateTransformation(long days, String ic){
         summarylist summarylist = new summarylist();
-        summarylist.setLastdays((int)days);
+        if (days == 0)
+            summarylist.setToDefault("lastdays");
+        else
+            summarylist.setLastdays((int)days);
         summarylist.updateAll("ic = ?", ic);
     }
 
