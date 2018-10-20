@@ -191,15 +191,19 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
             if (days_listed >= 21){
                 finishHabit(date, habit.getIc());
-                holder.linearLayout_Confirm.setVisibility(View.GONE);
+                //holder.linearLayout_Confirm.setVisibility(View.GONE);
 
-                habitList = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
+                Message msg = new Message();
+                msg.what = 1221;
+                handler.sendMessage(msg);
+
+                /*habitList = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
                 if (habitList.size() == 0){
                     summarylist summarylist1 = new summarylist();
                     summarylist1.setName(mContext.getResources().getString(R.string.NoPlan));
                     habitList.add(summarylist1);
-                }
-                notifyItemChanged(position);
+                }*/
+                //notifyItemChanged(position);
             }
 
 

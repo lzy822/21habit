@@ -32,7 +32,7 @@ public class MyService extends Service {
         super.onCreate();
 
         List<summarylist> summarylist = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(android.lzy.a21habit.summarylist.class);
-        for (int i = 0; i < summarylist.size() - 1; i++) {
+        for (int i = 0; i < summarylist.size(); i++) {
             int lastdays = summarylist.get(i).getLastdays() + 1;
             CharSequence name = summarylist.get(i).getName();
             CharSequence name1 = this.getResources().getText(R.string.YouHavePersist).toString() + lastdays + this.getResources().getText(R.string.Day);

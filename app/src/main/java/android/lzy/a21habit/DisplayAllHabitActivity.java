@@ -16,9 +16,12 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -88,6 +91,9 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     public static final String appApkRootPath = rootPath + "/21Days/Apk/";
 
+    //public static final String appApkRootPath = rootPath + "/Download/";
+    DownloadManager downloadManager;
+    DownloadFinishReceiver mReceiver;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +101,10 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         Log.w(TAG, "onCreate: " + DataUtil.getVersionCode(this) + "; " + DataUtil.getVerName(this));
         sendRequestWithOkHttp();
 
+        downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        //注册下载完成的广播
+        mReceiver = new DownloadFinishReceiver();
+        registerReceiver(mReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         isLongClick = 1;
         longClickedPosition = -1;
         longClickedHabitIc = "";
@@ -319,6 +329,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(receiver);
+        unregisterReceiver(mReceiver);
     }
 
     private void initFloatingButton(){
@@ -545,7 +556,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
             showImg(uri, imageView);
         }
     }
-
+    String apkName;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -572,9 +583,18 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                     q.setNegativeButton(getResources().getText(R.string.Confirm), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String apkName = "21habitV" + version + ".apk";
+                            apkName = "21habitV" + version + ".apk";
                             String apkUrl = serverRootPath + apkName;
-                            installNormal(DisplayAllHabitActivity.this, apkUrl);
+                            //使用DownLoadManager来下载
+                            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
+                            //将文件下载到自己的Download文件夹下,必须是External的
+                            //这是DownloadManager的限制
+                            //File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName);
+                            File file = new File(appApkRootPath + apkName);
+                            request.setDestinationUri(Uri.fromFile(file));
+                            //添加请求 开始下载
+                            long downloadId = downloadManager.enqueue(request);
+                            //installNormal(DisplayAllHabitActivity.this, apkUrl);
                         }
                     });
                     q.setMessage(getResources().getText(R.string.Q3));
@@ -587,24 +607,98 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         }
     };
 
+
+
+    //下载完成的广播
+    private class DownloadFinishReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //下载完成的广播接收者
+            long completeDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            File file = new File(appApkRootPath + apkName);
+            //Uri apkUri = downloadManager.getUriForDownloadedFile(completeDownloadId);
+            //File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName);
+            Log.w(TAG, "onReceive: " + Uri.fromFile(file).toString() + "; " + Uri.fromFile(file).getPath());
+            installNormal(DisplayAllHabitActivity.this, file.getPath());
+        }
+    }
+
     //普通安装
     private void installNormal(Context context, String apkUrl) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        //版本在7.0以上是不能直接通过uri访问的
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
-            //File file = (new File(apkUrl));
-            // 由于没有在Activity环境下启动Activity,设置下面的标签
-            //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            //参数1 上下文, 参数2 Provider主机地址 和配置文件中保持一致   参数3  共享的文件
-            Uri apkUri = Uri.parse(apkUrl);
-            //添加这一句表示对目标应用临时授权该Uri所代表的文件
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-        } else {
-            intent.setDataAndType(Uri.fromFile(new File(apkUrl)),
-                    "application/vnd.android.package-archive");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            if(getPackageManager().canRequestPackageInstalls()){
+
+            //已经同意权限在这里执行安装应用的代码
+//版本在7.0以上是不能直接通过uri访问的
+                    File file = (new File(apkUrl));
+                    // 由于没有在Activity环境下启动Activity,设置下面的标签
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    //参数1 上下文, 参数2 Provider主机地址 和配置文件中保持一致   参数3  共享的文件
+                    //Uri apkUri = Uri.parse("file://" + apkUrl);
+                    //Log.w(TAG, "installNormal: " + apkUri.getPath());
+                    //
+            /*if (!apkUri.isAbsolute())
+                DataUtil.getRealPathFromUriForAudio(context, apkUri);*/
+                    //Log.w(TAG, "installNormal: " + DataUtil.getRealPathFromUriForAudio(context, Uri.parse(apkUrl)));
+                    Uri apkUri = FileProvider.getUriForFile(
+                            DisplayAllHabitActivity.this
+                            , "android.lzy.a21habit.fileprovider"
+                            , file);
+                    Log.w(TAG, "installNormal: " + apkUri.getPath());
+                    //添加这一句表示对目标应用临时授权该Uri所代表的文件
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+
+                context.startActivity(intent);
+
+
+            }else{
+
+
+
+//没有允许  需要去申请权限，由于这个权限不是运行时权限，所有需要用户手
+
+//动去开启权限，可以给用户一个弹窗 提示用户去权限列表开启权限     开启设
+
+//置的代码  8.0新的API
+
+                Intent intent1 = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+
+                startActivityForResult(intent1, 1);
+
+            }
+
+        }else {
+            //版本在7.0以上是不能直接通过uri访问的
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+                File file = (new File(apkUrl));
+                // 由于没有在Activity环境下启动Activity,设置下面的标签
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //参数1 上下文, 参数2 Provider主机地址 和配置文件中保持一致   参数3  共享的文件
+                //Uri apkUri = Uri.parse("file://" + apkUrl);
+                //Log.w(TAG, "installNormal: " + apkUri.getPath());
+                //
+            /*if (!apkUri.isAbsolute())
+                DataUtil.getRealPathFromUriForAudio(context, apkUri);*/
+                //Log.w(TAG, "installNormal: " + DataUtil.getRealPathFromUriForAudio(context, Uri.parse(apkUrl)));
+                Uri apkUri = FileProvider.getUriForFile(
+                        DisplayAllHabitActivity.this
+                        , "android.lzy.a21habit.fileprovider"
+                        , file);
+                Log.w(TAG, "installNormal: " + apkUri.getPath());
+                //添加这一句表示对目标应用临时授权该Uri所代表的文件
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            } else {
+                intent.setDataAndType(Uri.fromFile(new File(apkUrl)),
+                        "application/vnd.android.package-archive");
+            }
+            context.startActivity(intent);
         }
-        context.startActivity(intent);
+
+
     }
 
     private int isLongClick;
