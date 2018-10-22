@@ -87,6 +87,10 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     public static final String serverRootPath = "http://120.79.77.39:822/";
 
+    public static final String serverApksPath = "Apks/";
+
+    public static final String serverPhotosPath = "Photos/";
+
     public static final String appPhotoRootPath = rootPath + "/21Days/Photos";
 
     public static final String appApkRootPath = rootPath + "/21Days/Apk/";
@@ -130,7 +134,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 try {
                     OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
-                            .url("http://120.79.77.39:822/VersionInfo.txt")
+                            .url(serverRootPath + serverApksPath + "VersionInfo.txt")
                             .build();
                     Response response = client.newCall(request).execute();
                     String responseData = response.body().string();
@@ -537,7 +541,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         //final String url1 = "http://120.79.77.39:822/1.jpg";
         String date = DataUtil.getYMDString();
         Log.w(TAG, "loadImage: " + date);
-        final String url = "http://120.79.77.39:822/" + date + ".jpg";
+        final String url = serverRootPath + serverPhotosPath + date + ".jpg";
         final String uri = appPhotoRootPath + "/" + date + ".jpg";
         File file = new File(uri);
         if (!file.exists()){
@@ -585,13 +589,13 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             apkName = "21habitV" + version + ".apk";
-                            String apkUrl = serverRootPath + apkName;
+                            String apkUrl = serverRootPath + serverApksPath + apkName;
                             //使用DownLoadManager来下载
                             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
                             //将文件下载到自己的Download文件夹下,必须是External的
                             //这是DownloadManager的限制
                             //File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName);
-                            File file = new File(appApkRootPath + apkName);
+                            File file = new File(appApkRootPath + serverApksPath + apkName);
                             request.setDestinationUri(Uri.fromFile(file));
                             //添加请求 开始下载
                             long downloadId = downloadManager.enqueue(request);
