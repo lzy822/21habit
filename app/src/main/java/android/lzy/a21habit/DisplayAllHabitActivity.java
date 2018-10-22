@@ -199,13 +199,13 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 toolbar.setBackgroundColor(Color.rgb(128, 128, 128));
                 menu.findItem(R.id.delete_item).setVisible(false);
                 menu.findItem(R.id.back).setVisible(false);
-                menu.findItem(R.id.calendar).setVisible(false);
+                //menu.findItem(R.id.calendar).setVisible(false);
                 break;
             case 0:
                 toolbar.setBackgroundColor(Color.rgb(233, 150, 122));
                 menu.findItem(R.id.delete_item).setVisible(true);
                 menu.findItem(R.id.back).setVisible(true);
-                menu.findItem(R.id.calendar).setVisible(true);
+                //menu.findItem(R.id.calendar).setVisible(true);
                 break;
         }
         return super.onPrepareOptionsMenu(menu);
@@ -315,11 +315,12 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 }
                 break;
             case  R.id.calendar:
-                if (isLongClick == 0) {
-                    Intent intent = new Intent(this, CalendarActivity.class);
+                Intent intent = new Intent(this, CalendarActivity.class);
+                /*if (isLongClick == 0) {
                     intent.putExtra("ic", longClickedHabitIc);
-                    startActivity(intent);
-                }
+                }*/
+                intent.putExtra("ic", longClickedHabitIc);
+                startActivity(intent);
                 break;
         }
         return true;
@@ -630,26 +631,26 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
             if(getPackageManager().canRequestPackageInstalls()){
 
-            //已经同意权限在这里执行安装应用的代码
-//版本在7.0以上是不能直接通过uri访问的
-                    File file = (new File(apkUrl));
-                    // 由于没有在Activity环境下启动Activity,设置下面的标签
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    //参数1 上下文, 参数2 Provider主机地址 和配置文件中保持一致   参数3  共享的文件
-                    //Uri apkUri = Uri.parse("file://" + apkUrl);
-                    //Log.w(TAG, "installNormal: " + apkUri.getPath());
-                    //
-            /*if (!apkUri.isAbsolute())
+                //已经同意权限在这里执行安装应用的代码
+                //版本在7.0以上是不能直接通过uri访问的
+                File file = (new File(apkUrl));
+                // 由于没有在Activity环境下启动Activity,设置下面的标签
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //参数1 上下文, 参数2 Provider主机地址 和配置文件中保持一致   参数3  共享的文件
+                //Uri apkUri = Uri.parse("file://" + apkUrl);
+                //Log.w(TAG, "installNormal: " + apkUri.getPath());
+                //
+                /*if (!apkUri.isAbsolute())
                 DataUtil.getRealPathFromUriForAudio(context, apkUri);*/
-                    //Log.w(TAG, "installNormal: " + DataUtil.getRealPathFromUriForAudio(context, Uri.parse(apkUrl)));
-                    Uri apkUri = FileProvider.getUriForFile(
-                            DisplayAllHabitActivity.this
-                            , "android.lzy.a21habit.fileprovider"
-                            , file);
-                    Log.w(TAG, "installNormal: " + apkUri.getPath());
-                    //添加这一句表示对目标应用临时授权该Uri所代表的文件
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                //Log.w(TAG, "installNormal: " + DataUtil.getRealPathFromUriForAudio(context, Uri.parse(apkUrl)));
+                Uri apkUri = FileProvider.getUriForFile(
+                        DisplayAllHabitActivity.this
+                        , "android.lzy.a21habit.fileprovider"
+                        , file);
+                Log.w(TAG, "installNormal: " + apkUri.getPath());
+                //添加这一句表示对目标应用临时授权该Uri所代表的文件
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
 
                 context.startActivity(intent);
 
@@ -658,11 +659,11 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
 
 
-//没有允许  需要去申请权限，由于这个权限不是运行时权限，所有需要用户手
+                //没有允许  需要去申请权限，由于这个权限不是运行时权限，所有需要用户手
 
-//动去开启权限，可以给用户一个弹窗 提示用户去权限列表开启权限     开启设
+                //动去开启权限，可以给用户一个弹窗 提示用户去权限列表开启权限     开启设
 
-//置的代码  8.0新的API
+                //置的代码  8.0新的API
 
                 Intent intent1 = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
 
@@ -672,7 +673,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
         }else {
             //版本在7.0以上是不能直接通过uri访问的
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 File file = (new File(apkUrl));
                 // 由于没有在Activity环境下启动Activity,设置下面的标签
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -680,7 +681,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 //Uri apkUri = Uri.parse("file://" + apkUrl);
                 //Log.w(TAG, "installNormal: " + apkUri.getPath());
                 //
-            /*if (!apkUri.isAbsolute())
+                /*if (!apkUri.isAbsolute())
                 DataUtil.getRealPathFromUriForAudio(context, apkUri);*/
                 //Log.w(TAG, "installNormal: " + DataUtil.getRealPathFromUriForAudio(context, Uri.parse(apkUrl)));
                 Uri apkUri = FileProvider.getUriForFile(

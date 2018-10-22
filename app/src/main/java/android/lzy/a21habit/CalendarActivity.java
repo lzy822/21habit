@@ -31,6 +31,8 @@ public class CalendarActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
+
+
         Intent intent = getIntent();
         String ic = intent.getStringExtra("ic");
         List<summarylist> list = LitePal.where("ic = ?", ic).find(summarylist.class);
@@ -49,6 +51,26 @@ public class CalendarActivity extends AppCompatActivity {
     private void showMaterialCalendarViewForNull(){
         MaterialCalendarView materialCalendarView = (MaterialCalendarView) findViewById(R.id.calendarView);
         materialCalendarView.setAllowClickDaysOutsideCurrentMonth(true);
+        List<summarylist> list = LitePal.where("status = ?", Integer.toString(EnumStatus.FINISH_STATUS)).find(summarylist.class);
+        materialCalendarView.setSelectionColor(Color.rgb(123, 175, 212));
+        materialCalendarView.setSelectionMode(MaterialCalendarView.SELECTION_MODE_MULTIPLE);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(MyApplication.getContext().getResources().getText(R.string.Date).toString());
+        try {
+            for (int i = 0; i < list.size(); i++) {
+                long size = DataUtil.daysBetween(list.get(i).getEnddate(), list.get(i).getOridate());
+                for (int k = 0; k < size; k++) {
+                    Date date = dateFormat.parse(DataUtil.datePlus(list.get(0).getOridate(), k));
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(date);
+                    LocalDate localDate = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DATE));
+                    CalendarDay calendarDay = CalendarDay.from(localDate);
+                    materialCalendarView.setDateSelected(calendarDay, true);
+                    materialCalendarView.setDateSelected(calendarDay, true);
+                }
+            }
+        }catch (ParseException e){
+            Log.w(TAG, e.toString());
+        }
     }
 
     @Override
@@ -72,6 +94,7 @@ public class CalendarActivity extends AppCompatActivity {
                     calendar.setTime(date);
                     LocalDate localDate = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DATE));
                     CalendarDay calendarDay = CalendarDay.from(localDate);
+                    materialCalendarView.setDateSelected(calendarDay, true);
                     materialCalendarView.setDateSelected(calendarDay, true);
                 }
             }
