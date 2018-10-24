@@ -595,7 +595,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                             //将文件下载到自己的Download文件夹下,必须是External的
                             //这是DownloadManager的限制
                             //File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName);
-                            File file = new File(appApkRootPath + serverApksPath + apkName);
+                            apkStoredPath = appApkRootPath + apkName;
+                            File file = new File(apkStoredPath);
                             request.setDestinationUri(Uri.fromFile(file));
                             //添加请求 开始下载
                             long downloadId = downloadManager.enqueue(request);
@@ -611,8 +612,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
         }
     };
-
-
+    private String apkStoredPath;
 
     //下载完成的广播
     private class DownloadFinishReceiver extends BroadcastReceiver{
@@ -620,7 +620,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             //下载完成的广播接收者
             long completeDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-            File file = new File(appApkRootPath + apkName);
+            File file = new File(apkStoredPath);
             //Uri apkUri = downloadManager.getUriForDownloadedFile(completeDownloadId);
             //File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName);
             Log.w(TAG, "onReceive: " + Uri.fromFile(file).toString() + "; " + Uri.fromFile(file).getPath());
