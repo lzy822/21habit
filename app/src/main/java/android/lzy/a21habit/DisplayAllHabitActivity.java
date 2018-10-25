@@ -1,6 +1,7 @@
 package android.lzy.a21habit;
 
 import android.app.DownloadManager;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -102,6 +103,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_all_habit);
+
         Log.w(TAG, "onCreate: " + DataUtil.getVersionCode(this) + "; " + DataUtil.getVerName(this));
         sendRequestWithOkHttp();
 
@@ -165,8 +167,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         initFloatingButton();
         loadImage();
         invalidateOptionsMenu();
-        Intent startIntent = new Intent(this, MyService.class);
-        startService(startIntent);
+        refreshForeService();
 
         Log.w(TAG, "onCreate: " + DataUtil.daysBetween(df.format(new Date(System.currentTimeMillis())), df.format(new Date(System.currentTimeMillis()))));
     }
@@ -263,6 +264,16 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         }
     }
 
+    private void refreshForeService(){
+        Intent startIntent = new Intent(DisplayAllHabitActivity.this, MyService.class);
+        startService(startIntent);
+    }
+
+    private void refreshStandardService(){
+        Intent startIntent = new Intent(DisplayAllHabitActivity.this, MyService.class);
+        startService(startIntent);
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
@@ -283,8 +294,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                             initFloatingButton();
                             loadImage();
                             invalidateOptionsMenu();
-                            Intent startIntent = new Intent(DisplayAllHabitActivity.this, MyService.class);
-                            startService(startIntent);
+                            cancelNotification();
+                            refreshForeService();
                         }
                     });
                     q.setNegativeButton(getResources().getText(R.string.BrokeHabit), new DialogInterface.OnClickListener() {
@@ -294,14 +305,13 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                             //removeWidgetForNoInProgressActivity();
                             //resetInterface();
                             //DisplayAllHabitActivity.this.finish();
-
                             initGlobalVariable();
                             refreshRecycler();
                             initFloatingButton();
                             loadImage();
                             invalidateOptionsMenu();
-                            Intent startIntent = new Intent(DisplayAllHabitActivity.this, MyService.class);
-                            startService(startIntent);
+                            cancelNotification();
+                            refreshForeService();
                         }
                     });
                     q.setMessage(getResources().getText(R.string.Q2));
@@ -328,6 +338,14 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    private void cancelNotification(){
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        int num = manager.getActiveNotifications().length;
+        for (int i = 0; i < num; i++){
+            manager.cancel(i + 1);
+        }
     }
 
     @Override
@@ -474,6 +492,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 refreshRecycler();
                 refreshIsOKForAddHabit();
                 initFloatingButton();
+                cancelNotification();
+                refreshForeService();
                 popupWindow.dismiss();
             }
         });
