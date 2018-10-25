@@ -6,8 +6,8 @@ android {
         applicationId "android.lzy.a21habit"
         minSdkVersion 24
         targetSdkVersion 27
-        versionCode 14
-        versionName "2.3.2"
+        versionCode 15
+        versionName "2.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

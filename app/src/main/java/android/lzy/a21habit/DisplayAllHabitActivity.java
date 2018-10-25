@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteBlobTooBigException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -83,6 +84,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     SimpleDateFormat df_time;
 
     Toolbar toolbar;
+
+    NetWorkStateReceiver netWorkStateReceiver;
 
     public static final String rootPath = Environment.getExternalStorageDirectory().toString();
 
@@ -158,6 +161,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         return data.substring(data.indexOf("<version>") + 9, data.indexOf("</version>"));
     }
 
+    private boolean isImgOK;
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -170,6 +175,37 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         refreshForeService();
 
         Log.w(TAG, "onCreate: " + DataUtil.daysBetween(df.format(new Date(System.currentTimeMillis())), df.format(new Date(System.currentTimeMillis()))));
+
+        if (netWorkStateReceiver == null) {
+            netWorkStateReceiver = new NetWorkStateReceiver();
+        }
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(netWorkStateReceiver, filter);
+        isImgOK = false;
+        netWorkStateReceiver.setBRInteractionListener(new NetWorkStateReceiver.BRInteraction() {
+            @Override
+            public void setText(final String uri) {
+                Log.w(TAG, "setText: " + isImgOK);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final ImageView imageView = (ImageView) findViewById(R.id.image);
+                        imageView.setVisibility(View.VISIBLE);
+                        if (!isImgOK)
+                            showImg(uri, imageView);
+
+                        isImgOK = true;
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(netWorkStateReceiver);
+        super.onPause();
     }
 
     private void refreshIsOKForAddHabit(){
@@ -581,6 +617,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
             showImg(uri, imageView);
         }
     }
+
     String apkName;
     private Handler handler = new Handler() {
         @Override
