@@ -148,45 +148,55 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
             if (days_listed != days_reality){
 
-                if (days_listed != -1) {
-                    holder.linearLayout_Confirm.setVisibility(View.VISIBLE);
-                    holder.dontConfirmBT.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            brokeHabit(habit.getIc(), days_listed);
-                            holder.linearLayout_Confirm.setVisibility(View.GONE);
+                if (days_reality - days_listed > 1){
+                    brokeHabit(habit.getIc(), days_listed);
 
-                            habitList = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
-                            if (habitList.size() == 0) {
-                                summarylist summarylist1 = new summarylist();
-                                summarylist1.setName(mContext.getResources().getString(R.string.NoPlan));
-                                habitList.add(summarylist1);
-                            }
-                            //notifyItemChanged(position);
 
-                            Message msg = new Message();
-                            msg.what = 1221;
-                            handler.sendMessage(msg);
-
-                        }
-                    });
-                    holder.ConfirmBT.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            //holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
-                            //long days = DataUtil.daysBetween(date, habit.getOridate());
-                            Log.w(TAG, "onBindViewHolder: " + days_reality);
-                            dateTransformation(days_reality, habit.getIc());
-                            refreshLastDays(holder, days_listed + 1, habit);
-                            //notifyItemChanged(position);
-                            Message msg = new Message();
-                            msg.what = 1221;
-                            handler.sendMessage(msg);
-                        }
-                    });
+                    Message msg = new Message();
+                    msg.what = 1221;
+                    handler.sendMessage(msg);
                 }else {
-                    dateTransformation(days_reality, habit.getIc());
-                    refreshLastDays(holder, days_listed + 1, habit);
+
+                    if (days_listed != -1) {
+                        holder.linearLayout_Confirm.setVisibility(View.VISIBLE);
+                        holder.dontConfirmBT.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                brokeHabit(habit.getIc(), days_listed);
+                                holder.linearLayout_Confirm.setVisibility(View.GONE);
+
+                                habitList = LitePal.where("status = ?", Integer.toString(EnumStatus.INPROGRESS_STATUS)).find(summarylist.class);
+                                if (habitList.size() == 0) {
+                                    summarylist summarylist1 = new summarylist();
+                                    summarylist1.setName(mContext.getResources().getString(R.string.NoPlan));
+                                    habitList.add(summarylist1);
+                                }
+                                //notifyItemChanged(position);
+
+                                Message msg = new Message();
+                                msg.what = 1221;
+                                handler.sendMessage(msg);
+
+                            }
+                        });
+                        holder.ConfirmBT.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //holder.lastDays.setText(Integer.toString(habit.getLastdays() + 1));
+                                //long days = DataUtil.daysBetween(date, habit.getOridate());
+                                Log.w(TAG, "onBindViewHolder: " + days_reality);
+                                dateTransformation(days_reality, habit.getIc());
+                                refreshLastDays(holder, days_listed + 1, habit);
+                                //notifyItemChanged(position);
+                                Message msg = new Message();
+                                msg.what = 1221;
+                                handler.sendMessage(msg);
+                            }
+                        });
+                    }else {
+                        dateTransformation(days_reality, habit.getIc());
+                        refreshLastDays(holder, days_listed + 1, habit);
+                    }
                 }
             }else {
                 refreshLastDays(holder, days_listed, habit);
