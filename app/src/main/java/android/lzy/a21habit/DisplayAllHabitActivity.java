@@ -68,9 +68,6 @@ import okhttp3.Response;
 
 public class DisplayAllHabitActivity extends AppCompatActivity {
     private static final String TAG = "DisplayAllHabitActivity";
-    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE";
-    public static final String WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
-    public static final int PERMISSION_CODE = 42042;
     List<summarylist> summarylist;
 
     boolean isOKForAddHabit;
@@ -83,23 +80,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     SimpleDateFormat df_time;
 
-    Toolbar toolbar;
-
     NetWorkStateReceiver netWorkStateReceiver;
-
-    public static final String rootPath = Environment.getExternalStorageDirectory().toString();
-
-    public static final String serverRootPath = "http://120.79.77.39:822/";
-
-    public static final String serverApksPath = "Apks/";
-
-    public static final String serverPhotosPath = "Photos/";
-
-    public static final String appPhotoRootPath = rootPath + "/21Days/Photos";
-
-    public static final String appApkRootPath = rootPath + "/21Days/Apk/";
-
-    //public static final String appApkRootPath = rootPath + "/Download/";
+    //public static final String EnumStatus.appApkRootPath = EnumStatus.rootPath + "/Download/";
     DownloadManager downloadManager;
     DownloadFinishReceiver mReceiver;
     @Override
@@ -117,7 +99,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         isLongClick = 1;
         longClickedPosition = -1;
         longClickedHabitIc = "";
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         pickFile();
 
@@ -139,7 +121,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                 try {
                     OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
-                            .url(serverRootPath + serverApksPath + "VersionInfo.txt")
+                            .url(EnumStatus.serverRootPath + EnumStatus.serverApksPath + "VersionInfo.txt")
                             .build();
                     Response response = client.newCall(request).execute();
                     String responseData = response.body().string();
@@ -235,6 +217,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         //toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         switch (isLongClick){
             case 1:
                 toolbar.setBackgroundColor(Color.rgb(128, 128, 128));
@@ -429,16 +412,16 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
     void pickFile() {
         int permissionCheck = ContextCompat.checkSelfPermission(this,
-                READ_EXTERNAL_STORAGE);
+                EnumStatus.READ_EXTERNAL_STORAGE);
         int permissionCheck1 = ContextCompat.checkSelfPermission(this,
-                WRITE_EXTERNAL_STORAGE);
+                EnumStatus.WRITE_EXTERNAL_STORAGE);
 
         if (permissionCheck != PackageManager.PERMISSION_GRANTED || permissionCheck1 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{
-                            READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE},
-                    PERMISSION_CODE
+                            EnumStatus.READ_EXTERNAL_STORAGE, EnumStatus.WRITE_EXTERNAL_STORAGE},
+                    EnumStatus.PERMISSION_CODE
             );
 
             return;
@@ -452,7 +435,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
-            case PERMISSION_CODE:
+            case EnumStatus.PERMISSION_CODE:
                 if (grantResults.length > 0) {
                     for (int result : grantResults) {
                         if (result != PackageManager.PERMISSION_GRANTED) {
@@ -472,7 +455,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
 
 
     private void newPhotoFolder(){
-        File appPhotoRootPathFile = new File(appPhotoRootPath);
+        File appPhotoRootPathFile = new File(EnumStatus.appPhotoRootPath);
         if (!appPhotoRootPathFile.exists() || !appPhotoRootPathFile.isDirectory()) appPhotoRootPathFile.mkdirs();
     }
 
@@ -597,8 +580,8 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         //final String url1 = "http://120.79.77.39:822/1.jpg";
         String date = DataUtil.getYMDString();
         Log.w(TAG, "loadImage: " + date);
-        final String url = serverRootPath + serverPhotosPath + date + ".jpg";
-        final String uri = appPhotoRootPath + "/" + date + ".jpg";
+        final String url = EnumStatus.serverRootPath + EnumStatus.serverPhotosPath + date + ".jpg";
+        final String uri = EnumStatus.appPhotoRootPath + "/" + date + ".jpg";
         File file = new File(uri);
         if (!file.exists()){
             new Thread(new Runnable() {
@@ -646,13 +629,13 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             apkName = "21habitV" + version + ".apk";
-                            String apkUrl = serverRootPath + serverApksPath + apkName;
+                            String apkUrl = EnumStatus.serverRootPath + EnumStatus.serverApksPath + apkName;
                             //使用DownLoadManager来下载
                             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
                             //将文件下载到自己的Download文件夹下,必须是External的
                             //这是DownloadManager的限制
                             //File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName);
-                            apkStoredPath = appApkRootPath + apkName;
+                            apkStoredPath = EnumStatus.appApkRootPath + apkName;
                             File file = new File(apkStoredPath);
                             request.setDestinationUri(Uri.fromFile(file));
                             //添加请求 开始下载
