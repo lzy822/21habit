@@ -362,7 +362,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
     private void cancelNotification(){
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         int num = manager.getActiveNotifications().length;
-        for (int i = 0; i < num; i++){
+        for (int i = 0; i < num; ++i){
             manager.cancel(i + 1);
         }
     }
