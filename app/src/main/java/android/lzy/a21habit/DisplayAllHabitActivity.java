@@ -62,8 +62,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class DisplayAllHabitActivity extends AppCompatActivity {
@@ -89,6 +91,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_all_habit);
 
+        sendRequestWithOkHttp1();
         Log.w(TAG, "onCreate: " + DataUtil.getVersionCode(this) + "; " + DataUtil.getVerName(this));
         sendRequestWithOkHttp();
 
@@ -112,6 +115,32 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         receiver = new ScreenBootReceiver();
         registerReceiver(receiver, filter);
 
+    }
+
+    private void sendRequestWithOkHttp1(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    RequestBody requestBody = new FormBody.Builder()
+                            .add("username", "lsj")
+                            .build();
+                    Request request = new Request.Builder()
+                            .url("http://120.79.77.39:822/Conn.asp")
+                            .post(requestBody)
+                            .build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    if (!responseData.contains("html"))
+                        Log.w(TAG, "sendRequestWithOkHttp: " + responseData);
+                    else
+                        Log.w(TAG, "sendRequestWithOkHttp: " + "error");
+                }catch (Exception e){
+                    Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
+                }
+            }
+        }).start();
     }
 
     private void sendRequestWithOkHttp(){
