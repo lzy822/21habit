@@ -9,10 +9,15 @@ import android.icu.text.TimeZoneFormat;
 import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,6 +26,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class DataUtil {
+
 
     private static final String TAG = "DataUtil";
     //核对日期
@@ -211,6 +217,120 @@ public class DataUtil {
             e.printStackTrace();
         }
         return verName;
+    }
+
+    static public Bitmap getBitmapFromImg(String filePath) throws FileNotFoundException {
+        File file = new File(filePath);
+        if (file.exists()){
+            Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+            return bitmap;
+        }else {
+            FileNotFoundException foundException = new FileNotFoundException();
+            throw foundException;
+        }
+    }
+
+    static public byte[] getBitmapByte(Bitmap bitmap, String filePath){
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        if (filePath.contains(".jpg") || filePath.contains(".jpeg"))
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        else if (filePath.contains(".png"))
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        try {
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return out.toByteArray();
+    }
+
+    static public Bitmap getBitmapFromByte(byte[] temp){
+        if(temp != null){
+            Bitmap bitmap = BitmapFactory.decodeByteArray(temp, 0, temp.length);
+            return bitmap;
+        }else{
+            return null;
+        }
+    }
+
+    static public String storeImgFileFromByte(byte[] temp, String fileName){
+        if(temp != null){
+            Bitmap bitmap = BitmapFactory.decodeByteArray(temp, 0, temp.length);
+            //Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory().toString() + "/test.png");
+            //Log.w(TAG, "sendRequestWithOkHttp: " + bitmap.);
+            String savePath;
+            File filePic;
+            /*if (Environment.getExternalStorageState().equals(
+                    Environment.MEDIA_MOUNTED)) {
+                savePath = SD_PATH;
+            } else {
+                savePath = MyApplication.getContext().getApplicationContext().getFilesDir()
+                        .getAbsolutePath()
+                        + IN_PATH;
+            }*/
+            savePath = EnumStatus.rootPath + "/";
+            try {
+                filePic = new File(savePath + fileName);
+                if (!filePic.exists()) {
+                    filePic.getParentFile().mkdirs();
+                    filePic.createNewFile();
+                }
+                FileOutputStream fos = new FileOutputStream(filePic);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                fos.flush();
+                fos.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return null;
+            }
+            return filePic.getAbsolutePath();
+        }
+        return null;
+    }
+
+    static public String storeImgFileFromString(byte[] temp, String fileName){
+        if(temp != null){
+            String savePath;
+            File filePic;
+            /*if (Environment.getExternalStorageState().equals(
+                    Environment.MEDIA_MOUNTED)) {
+                savePath = SD_PATH;
+            } else {
+                savePath = MyApplication.getContext().getApplicationContext().getFilesDir()
+                        .getAbsolutePath()
+                        + IN_PATH;
+            }*/
+            savePath = EnumStatus.rootPath + "/";
+            try {
+                filePic = new File(savePath + fileName);
+                if (!filePic.exists()) {
+                    filePic.getParentFile().mkdirs();
+                    filePic.createNewFile();
+                }
+                FileOutputStream fos = new FileOutputStream(filePic);
+                fos.write(temp);
+                fos.flush();
+                fos.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return null;
+            }
+            return filePic.getAbsolutePath();
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 二进制样式的字符串转byte数组
+    /// </summary>
+    /// <param name="binaryStr">二进制样式的字符串</param>
+    /// <returns></returns>
+    static public byte[] BinaryStr2ByteArray(String binaryStr)
+    {
+        return binaryStr.getBytes();
     }
 
 }

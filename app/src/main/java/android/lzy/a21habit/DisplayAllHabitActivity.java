@@ -49,6 +49,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.github.clans.fab.FloatingActionButton;
 
+import org.json.JSONObject;
 import org.litepal.LitePal;
 
 import java.io.ByteArrayOutputStream;
@@ -63,6 +64,8 @@ import java.util.Date;
 import java.util.List;
 
 import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -91,9 +94,9 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_all_habit);
 
-        sendRequestWithOkHttp1();
+        sendRequestWithOkHttp2();
         Log.w(TAG, "onCreate: " + DataUtil.getVersionCode(this) + "; " + DataUtil.getVerName(this));
-        sendRequestWithOkHttp();
+        //sendRequestWithOkHttp();
 
         downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         //注册下载完成的广播
@@ -115,6 +118,46 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         receiver = new ScreenBootReceiver();
         registerReceiver(receiver, filter);
 
+    }
+
+    private void sendRequestWithOkHttp2(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String imagePath = Environment.getExternalStorageDirectory().toString() + "/test.png";
+                    String url = "http://120.79.77.39:822/Conn3.asp";
+                    //String url = "http://120.79.77.39:822";
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    Log.d("imagePath", imagePath);
+                    File file = new File(imagePath);
+                    RequestBody image = RequestBody.create(MediaType.parse("image/png"), file);
+                    RequestBody requestBody = new MultipartBody.Builder()
+                            .setType(MultipartBody.FORM)
+                            .addFormDataPart("file", imagePath, image)
+                            .build();
+                    /*RequestBody requestBody = new FormBody.Builder()
+                            .add("file", DataUtil.getBitmapByte(DataUtil.getBitmapFromImg(imagePath), imagePath).toString())
+                            .build();*/
+                    Request request = new Request.Builder()
+                            //.url(url+"/uploadImage")
+                            .url(url)
+                            .post(requestBody)
+                            .build();
+                    Response response = okHttpClient.newCall(request).execute();
+                    /*byte[] bytes = response.body().bytes();
+                    for (int i = 0; i < bytes.length; ++i){
+                        Log.w(TAG, "sendRequestWithOkHttp: " + bytes[i]);
+                    }
+                    DataUtil.storeImgFileFromByte(DataUtil.BinaryStr2ByteArray(bytes.toString()), "2113132313.png");*/
+                    Log.w(TAG, "sendRequestWithOkHttp: " + response.body().contentType());
+                    Log.w(TAG, "sendRequestWithOkHttp: " + response.body().string());
+                    //JSONObject jsonObject = new JSONObject(response.body().string());
+                }catch (Exception e){
+                    Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
+                }
+            }
+        }).start();
     }
 
     private void sendRequestWithOkHttp1(){
