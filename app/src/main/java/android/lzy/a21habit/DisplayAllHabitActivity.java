@@ -94,7 +94,7 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_all_habit);
 
-        sendRequestWithOkHttp2();
+        //sendRequestWithOkHttp4();
         Log.w(TAG, "onCreate: " + DataUtil.getVersionCode(this) + "; " + DataUtil.getVerName(this));
         //sendRequestWithOkHttp();
 
@@ -118,6 +118,52 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         receiver = new ScreenBootReceiver();
         registerReceiver(receiver, filter);
 
+    }
+
+    private void sendRequestWithOkHttp4(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String imagePath = Environment.getExternalStorageDirectory().toString() + "/test.png";
+                    String url = "http://120.79.77.39:822/Conn4.asp";
+                    //String url = "http://120.79.77.39:822";
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    Log.d("imagePath", imagePath);
+                    File file = new File(imagePath);
+                    RequestBody image = RequestBody.create(MediaType.parse("image/png"), file);
+                    RequestBody requestBody = new MultipartBody.Builder()
+                            .setType(MultipartBody.FORM)
+                            .addFormDataPart("file", imagePath, image)
+                            .build();
+                    /*RequestBody requestBody = new FormBody.Builder()
+                            .add("file", DataUtil.getBitmapByte(DataUtil.getBitmapFromImg(imagePath), imagePath).toString())
+                            .build();*/
+                    Request request = new Request.Builder()
+                            //.url(url+"/uploadImage")
+                            .url(url)
+                            .post(requestBody)
+                            .build();
+                    Response response = okHttpClient.newCall(request).execute();
+                    /*byte[] bytes = response.body().bytes();
+                    for (int i = 0; i < bytes.length; ++i){
+                        Log.w(TAG, "sendRequestWithOkHttp: " + bytes[i]);
+                    }
+                    DataUtil.storeImgFileFromByte(DataUtil.BinaryStr2ByteArray(bytes.toString()), "2113132313.png");*/
+                    Log.w(TAG, "sendRequestWithOkHttp: " + response.body().contentType());
+                    String str = response.body().string().replace("C:\\photo\\", "http://120.79.77.39:822/");
+                    str = str.replace("\\", "/");
+                    String[] mUrl = str.split(";");
+                    for (int i = 0; i < mUrl.length; ++i){
+                        DataUtil.downloadFile3(mUrl[i], "/TuZhi");
+                    }
+                    Log.w(TAG, "sendRequestWithOkHttp: " + str);
+                    //JSONObject jsonObject = new JSONObject(response.body().string());
+                }catch (Exception e){
+                    Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
+                }
+            }
+        }).start();
     }
 
     private void sendRequestWithOkHttp2(){
