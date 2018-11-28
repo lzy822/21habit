@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
@@ -25,6 +26,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -34,18 +36,28 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import static android.Manifest.permission.READ_CONTACTS;
 import static android.Manifest.permission.READ_PHONE_STATE;
+import static android.content.ContentValues.TAG;
 
 /**
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
-
+    private static final String TAG = "LoginActivity";
     /**
      * Id to identity READ_CONTACTS permission request.
      */
@@ -73,45 +85,83 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        //populateAutoComplete();
-        pickFile();
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
+
+        SharedPreferences editor = getSharedPreferences("register", MODE_PRIVATE);
+        if (editor.getBoolean("status", false)){
+            //sendRequestWithOkHttpForUpdateData();
+            startActivity(new Intent(this, DisplayAllHabitActivity.class));
+            this.finish();
+        }else {
+            // Set up the login form.
+            mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+            //populateAutoComplete();
+            //pickFile();
+            mPasswordView = (EditText) findViewById(R.id.password);
+            mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                    if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
+                        attemptLogin();
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
-            }
-        });
+            });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+            Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+            mEmailSignInButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    attemptLogin();
+                }
+            });
+
+            mLoginFormView = findViewById(R.id.login_form);
+            mProgressView = findViewById(R.id.login_progress);
+
+            TextView mTransSignUpPageTextView = (TextView) findViewById(R.id.trans_sign_in_page);
+            mTransSignUpPageTextView.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
+            mTransSignUpPageTextView.setText(R.string.trans_sign_in_page);
+            mTransSignUpPageTextView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //LoginActivity.this.finish();
+                    Intent intent = new Intent(LoginActivity.this, LoginActivity2.class);
+                    //intent.putExtra("IMEI", getIMEI());
+                    startActivity(intent);
+                }
+            });
+        }
+
+
+    }
+
+    private void sendRequestWithOkHttpForUpdateData(){
+        new Thread(new Runnable() {
             @Override
-            public void onClick(View view) {
-                attemptLogin();
+            public void run() {
+                try {
+                    SharedPreferences editor = getSharedPreferences("register", MODE_PRIVATE);
+                    String url = "http://120.79.77.39:822/21habitupdate.asp";
+                    //String url = "http://120.79.77.39:822";
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    RequestBody requestBody = new FormBody.Builder()
+                            .add("username", editor.getString("username", ""))
+                            .add("password", editor.getString("password", ""))
+                            .add("finishhabits", "10")
+                            .build();
+                    Request request = new Request.Builder()
+                            //.url(url+"/uploadImage")
+                            .url(url)
+                            .post(requestBody)
+                            .build();
+                    Response response = okHttpClient.newCall(request).execute();
+                    Log.w(TAG, "sendRequestWithOkHttp: " + response.body().string());
+                }catch (Exception e){
+                    Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
+                }
             }
-        });
-
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-
-        TextView mTransSignUpPageTextView = (TextView) findViewById(R.id.trans_sign_in_page);
-        mTransSignUpPageTextView.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
-        mTransSignUpPageTextView.setText(R.string.trans_sign_in_page);
-        mTransSignUpPageTextView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //LoginActivity.this.finish();
-                Intent intent = new Intent(LoginActivity.this, LoginActivity2.class);
-                intent.putExtra("IMEI", getIMEI());
-                startActivity(intent);
-            }
-        });
+        }).start();
     }
 
     private void pickFile() {
@@ -130,20 +180,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }else {
 
         }
-    }
-
-    //获取设备IMEI码
-    public String getIMEI(){
-        String deviceId = "";
-        try {
-            TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-            deviceId = telephonyManager.getDeviceId();
-        }catch (SecurityException e){
-
-        }catch (NullPointerException e){
-
-        }
-        return deviceId;
     }
 
     /**
@@ -206,15 +242,69 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            //showProgress(true);
+            /*mAuthTask = new UserLoginTask(email, password);
+            mAuthTask.execute((Void) null);*/
+            sendRequestWithOkHttpForSignIn(email, password);
+
         }
+    }
+
+    private void sendRequestWithOkHttpForSignIn(final String username, final String password){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = "http://120.79.77.39:822/21habitsignupquery.asp";
+                    //String url = "http://120.79.77.39:822";
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    RequestBody requestBody = new FormBody.Builder()
+                            .add("username", username)
+                            .add("password", password)
+                            .build();
+                    Request request = new Request.Builder()
+                            //.url(url+"/uploadImage")
+                            .url(url)
+                            .post(requestBody)
+                            .build();
+                    Response response = okHttpClient.newCall(request).execute();
+                    //Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + response.body().string());
+                    String str = response.body().string();
+                    Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + str);
+                    if (str.contains("html")) {
+                        //showProgress(false);
+                        //Toast.makeText(LoginActivity.this, "请输入正确的登陆信息", Toast.LENGTH_LONG);
+                        Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + "error");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mEmailView.setError(null);
+                                View focusView = null;
+                                mEmailView.setError(getString(R.string.error_field_required_1));
+                                focusView = mEmailView;
+                                focusView.requestFocus();
+                            }
+                        });
+
+                    }else {
+                        SharedPreferences.Editor editor = getSharedPreferences("register", MODE_PRIVATE).edit();
+                        editor.putBoolean("status", true);
+                        editor.putString("username", username);
+                        editor.putString("password", password);
+                        editor.apply();
+                        startActivity(new Intent(LoginActivity.this, DisplayAllHabitActivity.class));
+                        LoginActivity.this.finish();
+                    }
+                }catch (Exception e){
+                    Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
+                }
+            }
+        }).start();
     }
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("@");
+        return email.length() > 4;
     }
 
     private boolean isPasswordValid(String password) {

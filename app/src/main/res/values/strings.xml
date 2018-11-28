@@ -41,6 +41,8 @@
     <string name="error_invalid_password">此密码太短了</string>
     <string name="error_incorrect_password">此密码不合规</string>
     <string name="error_field_required">此栏目必须填写</string>
+    <string name="error_field_required_1">用户名或密码错误</string>
+    <string name="error_field_required_2">该用户名已被注册</string>
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>

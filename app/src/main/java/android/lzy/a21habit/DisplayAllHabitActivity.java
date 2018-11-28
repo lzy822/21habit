@@ -43,6 +43,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -883,11 +884,13 @@ public class DisplayAllHabitActivity extends AppCompatActivity {
         final HabitAdapter adapter = new HabitAdapter(summarylist, handler);
         adapter.setOnItemLongClickListener(new HabitAdapter.OnRecyclerItemLongListener() {
             @Override
-            public void onItemLongClick(View view, String ic, int position) {
-                isLongClick = 0;
-                longClickedHabitIc = ic;
-                longClickedPosition = position;
-                invalidateOptionsMenu();
+            public void onItemLongClick(View view, String ic, String name, int position) {
+                if (!name.contains("无计划")) {
+                    isLongClick = 0;
+                    longClickedHabitIc = ic;
+                    longClickedPosition = position;
+                    invalidateOptionsMenu();
+                }
             }
         });
         adapter.setOnItemClickListener(new HabitAdapter.OnRecyclerItemClickListener() {

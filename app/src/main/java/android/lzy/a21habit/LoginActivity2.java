@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -198,11 +199,11 @@ public class LoginActivity2 extends AppCompatActivity implements LoaderCallbacks
             /*mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);*/
             Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + email + "; " + password);
-            sendRequestWithOkHttpForSignUpQuery(email, password);
+            sendRequestWithOkHttpForSignIn(email, password);
         }
     }
 
-    private void sendRequestWithOkHttpForSignUpQuery(final String username, final String password){
+    private void sendRequestWithOkHttpForSignIn(final String username, final String password){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -224,6 +225,21 @@ public class LoginActivity2 extends AppCompatActivity implements LoaderCallbacks
                     //Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + response.body().string());
                     if (response.body().string().contains("html")) sendRequestWithOkHttpForSignUp(username, password);
                     else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mEmailView.setError(null);
+                                View focusView = null;
+                                mEmailView.setError(getString(R.string.error_field_required_2));
+                                focusView = mEmailView;
+                                focusView.requestFocus();
+                            }
+                        });
+                        /*SharedPreferences.Editor editor = getSharedPreferences("register", MODE_PRIVATE).edit();
+                        editor.putBoolean("status", true);
+                        editor.putString("username", username);
+                        editor.putString("password", password);
+                        editor.apply();*/
                         /*LoginActivity2.this.finish();
                         startActivity(new Intent(LoginActivity2.this, DisplayAllHabitActivity.class));*/
                     }
@@ -239,14 +255,12 @@ public class LoginActivity2 extends AppCompatActivity implements LoaderCallbacks
             @Override
             public void run() {
                 try {
-                    Intent intent = getIntent();
                     String url = "http://120.79.77.39:822/21habitsignup.asp";
                     //String url = "http://120.79.77.39:822";
                     OkHttpClient okHttpClient = new OkHttpClient();
                     RequestBody requestBody = new FormBody.Builder()
                             .add("username", username)
                             .add("password", password)
-                            .add("IMEI", intent.getStringExtra("IMEI"))
                             .add("finishhabits", Integer.toString(LitePal.where("status = ?", Integer.toString(EnumStatus.FINISH_STATUS)).find(android.lzy.a21habit.summarylist.class).size()))
                             .build();
                     Request request = new Request.Builder()
@@ -255,7 +269,22 @@ public class LoginActivity2 extends AppCompatActivity implements LoaderCallbacks
                             .post(requestBody)
                             .build();
                     Response response = okHttpClient.newCall(request).execute();
-                    Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + response.body().string());
+                    //Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + response.body().string());
+                    String str = response.body().string();
+                    Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + str);
+                    if (str.contains("ok")){
+                        SharedPreferences.Editor editor = getSharedPreferences("register", MODE_PRIVATE).edit();
+                        editor.putBoolean("status", true);
+                        editor.putString("username", username);
+                        editor.putString("password", password);
+                        editor.apply();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                LoginActivity2.this.finish();
+                            }
+                        });
+                    }
                 }catch (Exception e){
                     Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
                 }

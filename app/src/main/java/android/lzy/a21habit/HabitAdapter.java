@@ -2,6 +2,7 @@ package android.lzy.a21habit;
 
 import android.app.Notification;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -31,6 +32,12 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
+
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static android.content.ContentValues.TAG;
 import static android.content.Context.MODE_PRIVATE;
@@ -62,6 +69,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
         LinearLayout linearLayout_Confirm;
         ImageButton dontConfirmBT;
         ImageButton ConfirmBT;
+        TextView tipsText;
 
         public ViewHolder(View view) {
             super(view);
@@ -72,7 +80,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
             linearLayout_Confirm = (LinearLayout) view.findViewById(R.id.linear_confirm);
             dontConfirmBT = (ImageButton) view.findViewById(R.id.dontFinishHabit);
             ConfirmBT = (ImageButton) view.findViewById(R.id.FinishHabit);
-
+            tipsText = (TextView) view.findViewById(R.id.tips_text);
 
         }
     }
@@ -109,8 +117,11 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
                 if (mOnItemLong != null){
                     int position = holder.getAdapterPosition();
                     summarylist habit = habitList.get(position);
-                    mOnItemLong.onItemLongClick(v, habit.getIc(), position);
-                    holder.cardView.setCardBackgroundColor(Color.RED);
+                    mOnItemLong.onItemLongClick(v, habit.getIc(), habit.getName(), position);
+
+                    if (!habit.getName().contains("无计划")){
+                        holder.cardView.setCardBackgroundColor(Color.RED);
+                    }
                }
                 return true;
             }
@@ -134,6 +145,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final summarylist habit = habitList.get(position);
         holder.cardView.setCardBackgroundColor(Color.WHITE);
+        holder.tipsText.setVisibility(View.GONE);
 
         String name = habit.getName();
         if (!name.equals(mContext.getResources().getString(R.string.NoPlan))){
@@ -206,7 +218,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
             if (days_listed >= 21){
                 finishHabit(date, habit.getIc());
                 //holder.linearLayout_Confirm.setVisibility(View.GONE);
-
+                sendRequestWithOkHttpForUpdateData();
                 Message msg = new Message();
                 msg.what = 1221;
                 handler.sendMessage(msg);
@@ -222,6 +234,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
 
         }else {
+            holder.tipsText.setVisibility(View.GONE);
             holder.linearLayout_Days.setVisibility(View.GONE);
             holder.linearLayout_Confirm.setVisibility(View.GONE);
         }
@@ -230,17 +243,52 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
         holder.habitName.setText(habit.getName());
     }
 
+    private void sendRequestWithOkHttpForUpdateData(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    SharedPreferences editor = mContext.getSharedPreferences("register", MODE_PRIVATE);
+                    String url = "http://120.79.77.39:822/21habitupdate.asp";
+                    //String url = "http://120.79.77.39:822";
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    RequestBody requestBody = new FormBody.Builder()
+                            .add("username", editor.getString("username", ""))
+                            .add("password", editor.getString("password", ""))
+                            .add("finishhabits", Integer.toString(LitePal.where("status = ?", Integer.toString(EnumStatus.FINISH_STATUS)).find(summarylist.class).size()))
+                            .build();
+                    Request request = new Request.Builder()
+                            //.url(url+"/uploadImage")
+                            .url(url)
+                            .post(requestBody)
+                            .build();
+                    Response response = okHttpClient.newCall(request).execute();
+                    Log.w(TAG, "sendRequestWithOkHttp: " + response.body().string());
+                }catch (Exception e){
+                    Log.w(TAG, "sendRequestWithOkHttp: " + e.toString());
+                }
+            }
+        }).start();
+    }
+
     private void refreshLastDays(final ViewHolder holder, final long days_listed, final summarylist habit){
         holder.linearLayout_Confirm.setVisibility(View.GONE);
         holder.linearLayout_Days.setVisibility(View.VISIBLE);
+        holder.tipsText.setVisibility(View.VISIBLE);
         long days_show = days_listed + 1;
         if (days_show > 0 && days_show <= 7){
+            holder.tipsText.setTextColor(Color.RED);
+            holder.tipsText.setText(R.string.LevelOne);
             holder.lastDays.setTextColor(Color.RED);
             holder.habitName.setTextColor(Color.RED);
         }else if (days_show > 7 && days_show <= 14){
+            holder.tipsText.setTextColor(Color.rgb(233, 150, 122));
+            holder.tipsText.setText(R.string.LevelTwo);
             holder.lastDays.setTextColor(Color.rgb(233, 150, 122));
             holder.habitName.setTextColor(Color.rgb(233, 150, 122));
         }else if (days_show > 14 && days_show <= 22){
+            holder.tipsText.setTextColor(Color.GREEN);
+            holder.tipsText.setText(R.string.LevelThree);
             holder.lastDays.setTextColor(Color.GREEN);
             holder.habitName.setTextColor(Color.GREEN);
         }
@@ -295,7 +343,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     }
 
     public interface OnRecyclerItemLongListener{
-        void onItemLongClick(View view, String ic, int position);
+        void onItemLongClick(View view, String ic, String name, int position);
     }
 
     public void setOnItemLongClickListener(OnRecyclerItemLongListener listener){

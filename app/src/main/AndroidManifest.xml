@@ -10,7 +10,6 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <!--
 <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -93,8 +92,7 @@
         </provider>
 
         <activity
-            android:name=".LoginActivity"
-            android:label="@string/title_activity_login">
+            android:name=".LoginActivity">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
 
