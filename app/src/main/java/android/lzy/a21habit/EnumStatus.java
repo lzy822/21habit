@@ -35,6 +35,7 @@ public class EnumStatus {
 
     public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE";
     public static final String WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
+    public static final String READ_PHONE_STATE = "android.permission.READ_PHONE_STATE";
     public static final int PERMISSION_CODE = 42042;
 
 }

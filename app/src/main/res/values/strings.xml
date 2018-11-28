@@ -29,4 +29,21 @@
     <string name="LevelOne">“刻意，不自然”，需要十分刻意地提醒自己。你会觉得有些不自然，不舒服，你应该调动意志力，克服这些情况。</string>
     <string name="LevelTwo">“刻意，自然”，你已经觉得比较自然，比较舒服了，但是一不留意，你还会恢复到以前，因此，你还需要刻意地提醒自己改变。</string>
     <string name="LevelThree">“不刻意，自然”，其实这就是习惯，这一阶段被称为“习惯性的稳定期”。一旦跨入这个阶段，你就已经完成了自我改造，这个习惯已成为你生命中的一个有机的组成部分，它会自然而然地不停为你“效劳”。</string>
+    <string name="title_activity_login">登陆</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">用户名</string>
+    <string name="prompt_password">密码</string>
+    <string name="action_sign_in">登陆</string>
+    <string name="action_sign_in_short">登陆</string>
+    <string name="action_sign_up">注册</string>
+    <string name="action_sign_up_short">注册</string>
+    <string name="error_invalid_email">此用户名太短了</string>
+    <string name="error_invalid_password">此密码太短了</string>
+    <string name="error_incorrect_password">此密码不合规</string>
+    <string name="error_field_required">此栏目必须填写</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="title_activity_login2">注册</string>
+    <string name="trans_sign_in_page">没有账号密码，需要注册。</string>
 </resources>
