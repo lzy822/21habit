@@ -18,11 +18,13 @@
     <string name="Yes">打破了</string>
     <string name="No">没有</string>
     <string name="Warning">警告</string>
+    <string name="Warning_sign_up">请确认你的注册信息</string>
     <string name="Notification">通知</string>
     <string name="ScreenBootReceiver">21habit已启动</string>
     <string name="Q1">你打破了习惯吗？</string>
     <string name="Q2">请选择删除方式？</string>
     <string name="Q3">你想下载最新版本吗？</string>
+    <string name="Q4"></string>
     <string name="DeleteHabit">删除习惯</string>
     <string name="BrokeHabit">打破习惯</string>
     <string name="Time">HH:mm:ss</string>

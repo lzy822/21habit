@@ -3,11 +3,14 @@ package android.lzy.a21habit;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.DownloadManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -34,6 +37,7 @@ import android.widget.TextView;
 
 import org.litepal.LitePal;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -164,8 +168,8 @@ public class LoginActivity2 extends AppCompatActivity implements LoaderCallbacks
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        final String email = mEmailView.getText().toString();
+        final String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
@@ -199,7 +203,24 @@ public class LoginActivity2 extends AppCompatActivity implements LoaderCallbacks
             /*mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);*/
             Log.w(TAG, "sendRequestWithOkHttpForSignUp: " + email + "; " + password);
-            sendRequestWithOkHttpForSignIn(email, password);
+            AlertDialog.Builder q = new AlertDialog.Builder(LoginActivity2.this);
+            q.setPositiveButton(getResources().getText(R.string.No), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+            q.setNegativeButton(getResources().getText(R.string.Confirm), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    sendRequestWithOkHttpForSignIn(email, password);
+                }
+            });
+            String str = "你的账号为： " + email + "\n" + "你的密码为： " + password + "\n" + "确认后将不可修改！";
+            //q.setMessage(getResources().getText(R.string.Q3));
+            q.setMessage(str);
+            q.setTitle(getResources().getText(R.string.Warning_sign_up));
+            q.show();
         }
     }
 
